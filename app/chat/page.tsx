@@ -17,18 +17,75 @@ function ChatComponent() {
 
   const [lead, setLead] = useState({ name: "", phone: "", email: "" });
 
+  // ✅ NEW: FAQ + CONTACT
+  const [faqs, setFaqs] = useState<any[]>([]);
+  const [contact, setContact] = useState({ phone: "", email: "" });
+
   const chatEndRef = useRef<HTMLDivElement>(null);
+
+  // ✅ LOAD CLIENT DATA
+  useEffect(() => {
+    try {
+      const storedClients = JSON.parse(localStorage.getItem("clients") || "[]");
+
+      const client = storedClients.find(
+        (c: any) => String(c.id) === String(clientId)
+      );
+
+      if (client) {
+        setFaqs(client.faqs || []);
+        setContact(client.contact || { phone: "", email: "" });
+      }
+    } catch {}
+  }, [clientId]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chat]);
 
+  // ✅ FAQ MATCHING FUNCTION
+  function getFAQAnswer(text: string) {
+    const userWords = text.toLowerCase().split(" ");
+
+    let bestMatch = null;
+    let bestScore = 0;
+
+    for (let faq of faqs) {
+      const qWords = faq.question.toLowerCase().split(" ");
+
+      let matches = 0;
+
+      for (let word of qWords) {
+        if (userWords.includes(word)) {
+          matches++;
+        }
+      }
+
+      const score = matches / qWords.length;
+
+      if (score > bestScore) {
+        bestScore = score;
+        bestMatch = faq;
+      }
+    }
+
+    if (bestScore >= 0.4 && bestMatch) {
+      return bestMatch.answer;
+    }
+
+    return null;
+  }
+
+  // ✅ SEND MESSAGE (FIXED)
   function sendMessage() {
     if (!message.trim()) return;
 
-    setChat(prev => [...prev, { role: "user", text: message }]);
+    const userText = message.trim();
+
+    setChat(prev => [...prev, { role: "user", text: userText }]);
     setMessage("");
 
+    // ✅ LEAD GATE
     if (!leadCaptured) {
       setChat(prev => [
         ...prev,
@@ -42,10 +99,31 @@ function ChatComponent() {
       return;
     }
 
-    setChat(prev => [
-      ...prev,
-      { role: "bot", text: "Thanks! We'll take care of that 👍" },
-    ]);
+    // ✅ FAQ RESPONSE
+    const answer = getFAQAnswer(userText);
+
+    if (answer) {
+      setChat(prev => [...prev, { role: "bot", text: answer }]);
+    } else {
+      setChat(prev => [
+        ...prev,
+        {
+          role: "bot",
+          text: getFallbackMessage(),
+        },
+      ]);
+    }
+  }
+
+  // ✅ FALLBACK MESSAGE
+  function getFallbackMessage() {
+    let msg =
+      "I’m not sure about that, but our team can help you.\n\n";
+
+    if (contact.phone) msg += `📞 ${contact.phone}\n`;
+    if (contact.email) msg += `📧 ${contact.email}`;
+
+    return msg;
   }
 
   function submitLead() {
@@ -61,7 +139,7 @@ function ChatComponent() {
 
     setChat(prev => [
       ...prev,
-      { role: "bot", text: `Thanks ${lead.name}! 👍` },
+      { role: "bot", text: `Thanks ${lead.name}! 👍 Ask me anything.` },
     ]);
 
     setLead({ name: "", phone: "", email: "" });
@@ -70,12 +148,12 @@ function ChatComponent() {
   return (
     <div style={{
       minHeight: "100vh",
-      background: "#7c3aed", // ✅ PURPLE BACKGROUND
+      background: "#7c3aed",
       display: "flex",
       justifyContent: "center",
       alignItems: "center",
       fontFamily: "Arial",
-      color: "#111" // ✅ ALL TEXT DARK
+      color: "#111"
     }}>
       <div style={{
         width: "100%",
@@ -85,22 +163,17 @@ function ChatComponent() {
         borderRadius: 12,
         display: "flex",
         flexDirection: "column",
-        boxShadow: "0 5px 20px rgba(0,0,0,0.2)"
       }}>
 
-        {/* HEADER */}
         <div style={{
           padding: 15,
           borderBottom: "1px solid #ddd",
-          fontWeight: "bold",
           textAlign: "center",
-          fontSize: 18,
-          color: "#111"
+          fontWeight: "bold"
         }}>
           💬 Chat Support
         </div>
 
-        {/* CHAT AREA */}
         <div style={{
           flex: 1,
           overflowY: "auto",
@@ -116,38 +189,23 @@ function ChatComponent() {
                 alignSelf: c.role === "user" ? "flex-end" : "flex-start",
                 background:
                   c.role === "user" ? "#3b82f6" : "#e5e7eb",
-                color: "#111",
                 padding: "10px 14px",
                 borderRadius: 12,
-                maxWidth: "75%",
-                fontSize: 14
+                maxWidth: "75%"
               }}
             >
               {c.text}
             </div>
           ))}
 
-          {/* ✅ LEAD FORM FIXED */}
           {collectingLead && (
-            <div style={{
-              background: "white",
-              padding: 15,
-              borderRadius: 8,
-              border: "1px solid #ccc"
-            }}>
+            <div style={{ padding: 10, border: "1px solid #ccc", borderRadius: 8 }}>
               <input
                 placeholder="Name"
                 value={lead.name}
                 onChange={(e) =>
                   setLead({ ...lead, name: e.target.value })
                 }
-                style={{
-                  width: "100%",
-                  marginBottom: 8,
-                  padding: 10,
-                  border: "1px solid #ccc",
-                  color: "#111"
-                }}
               />
 
               <input
@@ -156,13 +214,6 @@ function ChatComponent() {
                 onChange={(e) =>
                   setLead({ ...lead, phone: e.target.value })
                 }
-                style={{
-                  width: "100%",
-                  marginBottom: 8,
-                  padding: 10,
-                  border: "1px solid #ccc",
-                  color: "#111"
-                }}
               />
 
               <input
@@ -171,67 +222,24 @@ function ChatComponent() {
                 onChange={(e) =>
                   setLead({ ...lead, email: e.target.value })
                 }
-                style={{
-                  width: "100%",
-                  marginBottom: 8,
-                  padding: 10,
-                  border: "1px solid #ccc",
-                  color: "#111"
-                }}
               />
 
-              <button
-                onClick={submitLead}
-                style={{
-                  width: "100%",
-                  background: "#3b82f6",
-                  color: "white",
-                  padding: 10,
-                  border: "none",
-                  borderRadius: 6
-                }}
-              >
-                Submit
-              </button>
+              <button onClick={submitLead}>Submit</button>
             </div>
           )}
 
           <div ref={chatEndRef} />
         </div>
 
-        {/* INPUT BAR */}
-        <div style={{
-          display: "flex",
-          borderTop: "1px solid #ddd",
-          padding: 10
-        }}>
+        <div style={{ display: "flex", padding: 10 }}>
           <input
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-            placeholder="Type a message..."
-            style={{
-              flex: 1,
-              padding: 10,
-              borderRadius: 6,
-              border: "1px solid #ccc",
-              color: "#111"
-            }}
+            style={{ flex: 1 }}
           />
 
-          <button
-            onClick={sendMessage}
-            style={{
-              marginLeft: 8,
-              background: "#3b82f6",
-              color: "white",
-              border: "none",
-              borderRadius: 6,
-              padding: "10px 16px"
-            }}
-          >
-            Send
-          </button>
+          <button onClick={sendMessage}>Send</button>
         </div>
       </div>
     </div>
