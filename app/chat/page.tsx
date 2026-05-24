@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = "force-dynamic"; // ✅ FIX ADDED HERE
+
 import React, { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 
@@ -16,7 +18,6 @@ export default function ChatPage() {
   const [leadCaptured, setLeadCaptured] = useState(false);
   const [collectingLead, setCollectingLead] = useState(false);
 
-  // ✅ UPDATED: includes email
   const [lead, setLead] = useState({ name: "", phone: "", email: "" });
 
   const [faqs, setFaqs] = useState<any[]>([]);
@@ -26,7 +27,6 @@ export default function ChatPage() {
 
   const chatEndRef = useRef<HTMLDivElement>(null);
 
-  // ✅ LOAD CLIENT DATA
   useEffect(() => {
     try {
       const storedClients = JSON.parse(localStorage.getItem("clients") || "[]");
@@ -45,7 +45,6 @@ export default function ChatPage() {
     }
   }, [clientId]);
 
-  // ✅ AUTO SCROLL
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chat]);
@@ -103,9 +102,7 @@ export default function ChatPage() {
     const userText = message.trim();
 
     setLastQuestion(userText);
-
     setChat((prev) => [...prev, { role: "user", text: userText }]);
-
     setMessage("");
 
     if (!leadCaptured) {
@@ -164,7 +161,7 @@ export default function ChatPage() {
     const newLead = {
       name: lead.name,
       phone: lead.phone,
-      email: lead.email, // ✅ NEW
+      email: lead.email,
       clientId,
       timestamp: Date.now(),
     };
@@ -185,7 +182,6 @@ export default function ChatPage() {
       },
     ]);
 
-    // ✅ RESET ALL FIELDS
     setLead({ name: "", phone: "", email: "" });
 
     setTimeout(answerAfterLead, 500);
@@ -266,7 +262,6 @@ export default function ChatPage() {
                 style={{ width: "100%", marginBottom: 6, padding: 10 }}
               />
 
-              {/* ✅ NEW EMAIL FIELD */}
               <input
                 placeholder="Email (optional)"
                 value={lead.email}
