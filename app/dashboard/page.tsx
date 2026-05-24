@@ -8,6 +8,9 @@ export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState("leads");
   const [leads, setLeads] = useState<any[]>([]);
 
+  // ✅ NEW: client creator
+  const [clientName, setClientName] = useState("");
+
   const [faqQuestion, setFaqQuestion] = useState("");
   const [faqAnswer, setFaqAnswer] = useState("");
 
@@ -40,6 +43,26 @@ export default function DashboardPage() {
   function formatDate(timestamp: number) {
     if (!timestamp) return "";
     return new Date(timestamp).toLocaleString();
+  }
+
+  // ✅ ✅ ADD CLIENT (FIX)
+  function addClient() {
+    if (!clientName.trim()) return;
+
+    const newClient = {
+      id: Date.now().toString(),
+      name: clientName,
+      faqs: [],
+      contact: { phone: "", email: "" },
+      login: { username: "", password: "" }
+    };
+
+    const updated = [...clients, newClient];
+
+    setClients(updated);
+    localStorage.setItem("clients", JSON.stringify(updated));
+
+    setClientName("");
   }
 
   function copyChatLink(clientId: string) {
@@ -123,6 +146,35 @@ export default function DashboardPage() {
       <div style={{ width: 260, background: "#111", color: "white", padding: 20 }}>
         <h2>Clients</h2>
 
+        {/* ✅ ADD CLIENT UI */}
+        <div style={{ marginTop: 15 }}>
+          <input
+            placeholder="New client name"
+            value={clientName}
+            onChange={(e) => setClientName(e.target.value)}
+            style={{
+              width: "100%",
+              padding: 8,
+              marginBottom: 6
+            }}
+          />
+
+          <button
+            onClick={addClient}
+            style={{
+              width: "100%",
+              padding: 8,
+              background: "#3b82f6",
+              color: "white",
+              border: "none",
+              borderRadius: 6
+            }}
+          >
+            Add Client
+          </button>
+        </div>
+
+        {/* CLIENT LIST */}
         {clients.map(client => (
           <div
             key={client.id}
@@ -153,7 +205,7 @@ export default function DashboardPage() {
                 fontSize: 12
               }}
             >
-              Copy Chat Link
+              Copy Link
             </button>
           </div>
         ))}
@@ -184,13 +236,7 @@ export default function DashboardPage() {
                       activeTab === tab ? "white" : "#111"
                   }}
                 >
-                  {tab === "leads"
-                    ? "Leads"
-                    : tab === "info"
-                    ? "Company Info"
-                    : tab === "contact"
-                    ? "Contact Info"
-                    : "Login Info"}
+                  {tab}
                 </button>
               ))}
             </div>
@@ -198,10 +244,10 @@ export default function DashboardPage() {
             {/* CONTENT */}
             <div style={{ background: "white", padding: 20, borderRadius: 12 }}>
 
-              {/* ✅ LEADS (SORTED NEWEST FIRST) */}
+              {/* ✅ LEADS */}
               {activeTab === "leads" &&
                 clientLeads
-                  .slice() // ✅ avoids mutating original array
+                  .slice()
                   .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
                   .map((lead, i) => (
                     <div key={i} style={{
@@ -215,18 +261,9 @@ export default function DashboardPage() {
                       <div>
                         <strong>{lead.name}</strong>
                         <div>{lead.phone}</div>
+                        {lead.email && <div>📧 {lead.email}</div>}
 
-                        {lead.email && (
-                          <div style={{ marginTop: 3 }}>
-                            📧 {lead.email}
-                          </div>
-                        )}
-
-                        <div style={{
-                          fontSize: 12,
-                          marginTop: 5,
-                          color: "#555"
-                        }}>
+                        <div style={{ fontSize: 12, color: "#555" }}>
                           {formatDate(lead.timestamp)}
                         </div>
                       </div>
@@ -237,8 +274,8 @@ export default function DashboardPage() {
                           background: "#ef4444",
                           color: "white",
                           padding: "8px 12px",
-                          borderRadius: 6,
-                          border: "none"
+                          border: "none",
+                          borderRadius: 6
                         }}
                       >
                         Delete
@@ -247,7 +284,7 @@ export default function DashboardPage() {
                   ))
               }
 
-              {/* rest unchanged */}
+              {/* ✅ OTHER TABS ALREADY WORK */}
 
             </div>
           </>
