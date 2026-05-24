@@ -17,25 +17,7 @@ function ChatComponent() {
 
   const [lead, setLead] = useState({ name: "", phone: "", email: "" });
 
-  const [faqs, setFaqs] = useState<any[]>([]);
-  const [contact, setContact] = useState({ phone: "", email: "" });
-
-  const [lastQuestion, setLastQuestion] = useState("");
   const chatEndRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    try {
-      const storedClients = JSON.parse(localStorage.getItem("clients") || "[]");
-      const client = storedClients.find(
-        (c: any) => String(c.id) === String(clientId)
-      );
-
-      if (client) {
-        setFaqs(client.faqs || []);
-        setContact(client.contact || {});
-      }
-    } catch {}
-  }, [clientId]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -44,10 +26,7 @@ function ChatComponent() {
   function sendMessage() {
     if (!message.trim()) return;
 
-    const userText = message.trim();
-
-    setLastQuestion(userText);
-    setChat(prev => [...prev, { role: "user", text: userText }]);
+    setChat(prev => [...prev, { role: "user", text: message }]);
     setMessage("");
 
     if (!leadCaptured) {
@@ -65,30 +44,24 @@ function ChatComponent() {
 
     setChat(prev => [
       ...prev,
-      { role: "bot", text: "Thanks! We'll take care of that for you 👍" },
+      { role: "bot", text: "Thanks! We'll take care of that 👍" },
     ]);
   }
 
   function submitLead() {
     const storedLeads = JSON.parse(localStorage.getItem("leads") || "[]");
 
-    const newLead = {
-      ...lead,
-      clientId,
-      timestamp: Date.now(),
-    };
-
-    localStorage.setItem("leads", JSON.stringify([...storedLeads, newLead]));
+    localStorage.setItem(
+      "leads",
+      JSON.stringify([...storedLeads, { ...lead, clientId }])
+    );
 
     setLeadCaptured(true);
     setCollectingLead(false);
 
     setChat(prev => [
       ...prev,
-      {
-        role: "bot",
-        text: `Thanks ${lead.name}! 👍 Let me help you with that.`,
-      },
+      { role: "bot", text: `Thanks ${lead.name}! 👍` },
     ]);
 
     setLead({ name: "", phone: "", email: "" });
@@ -97,11 +70,12 @@ function ChatComponent() {
   return (
     <div style={{
       minHeight: "100vh",
-      background: "#f3f4f6",
+      background: "#7c3aed", // ✅ PURPLE BACKGROUND
       display: "flex",
       justifyContent: "center",
       alignItems: "center",
       fontFamily: "Arial",
+      color: "#111" // ✅ ALL TEXT DARK
     }}>
       <div style={{
         width: "100%",
@@ -111,16 +85,17 @@ function ChatComponent() {
         borderRadius: 12,
         display: "flex",
         flexDirection: "column",
-        boxShadow: "0 5px 20px rgba(0,0,0,0.1)"
+        boxShadow: "0 5px 20px rgba(0,0,0,0.2)"
       }}>
 
         {/* HEADER */}
         <div style={{
           padding: 15,
-          borderBottom: "1px solid #eee",
+          borderBottom: "1px solid #ddd",
           fontWeight: "bold",
           textAlign: "center",
-          fontSize: 18
+          fontSize: 18,
+          color: "#111"
         }}>
           💬 Chat Support
         </div>
@@ -141,8 +116,7 @@ function ChatComponent() {
                 alignSelf: c.role === "user" ? "flex-end" : "flex-start",
                 background:
                   c.role === "user" ? "#3b82f6" : "#e5e7eb",
-                color:
-                  c.role === "user" ? "white" : "#111",
+                color: "#111",
                 padding: "10px 14px",
                 borderRadius: 12,
                 maxWidth: "75%",
@@ -153,13 +127,13 @@ function ChatComponent() {
             </div>
           ))}
 
-          {/* LEAD FORM */}
+          {/* ✅ LEAD FORM FIXED */}
           {collectingLead && (
             <div style={{
-              background: "#f9fafb",
-              padding: 10,
+              background: "white",
+              padding: 15,
               borderRadius: 8,
-              border: "1px solid #ddd"
+              border: "1px solid #ccc"
             }}>
               <input
                 placeholder="Name"
@@ -167,7 +141,13 @@ function ChatComponent() {
                 onChange={(e) =>
                   setLead({ ...lead, name: e.target.value })
                 }
-                style={{ width: "100%", marginBottom: 6, padding: 8 }}
+                style={{
+                  width: "100%",
+                  marginBottom: 8,
+                  padding: 10,
+                  border: "1px solid #ccc",
+                  color: "#111"
+                }}
               />
 
               <input
@@ -176,7 +156,13 @@ function ChatComponent() {
                 onChange={(e) =>
                   setLead({ ...lead, phone: e.target.value })
                 }
-                style={{ width: "100%", marginBottom: 6, padding: 8 }}
+                style={{
+                  width: "100%",
+                  marginBottom: 8,
+                  padding: 10,
+                  border: "1px solid #ccc",
+                  color: "#111"
+                }}
               />
 
               <input
@@ -185,7 +171,13 @@ function ChatComponent() {
                 onChange={(e) =>
                   setLead({ ...lead, email: e.target.value })
                 }
-                style={{ width: "100%", marginBottom: 6, padding: 8 }}
+                style={{
+                  width: "100%",
+                  marginBottom: 8,
+                  padding: 10,
+                  border: "1px solid #ccc",
+                  color: "#111"
+                }}
               />
 
               <button
@@ -210,7 +202,7 @@ function ChatComponent() {
         {/* INPUT BAR */}
         <div style={{
           display: "flex",
-          borderTop: "1px solid #eee",
+          borderTop: "1px solid #ddd",
           padding: 10
         }}>
           <input
@@ -222,7 +214,8 @@ function ChatComponent() {
               flex: 1,
               padding: 10,
               borderRadius: 6,
-              border: "1px solid #ccc"
+              border: "1px solid #ccc",
+              color: "#111"
             }}
           />
 
