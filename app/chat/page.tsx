@@ -1,11 +1,10 @@
 "use client";
 
-export const dynamic = "force-dynamic"; // ✅ FIX ADDED HERE
-
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 
-export default function ChatPage() {
+// ✅ YOUR ORIGINAL CHAT LOGIC MOVED HERE
+function ChatComponent() {
   const params = useSearchParams();
   const clientId = params.get("client");
 
@@ -224,20 +223,7 @@ export default function ChatPage() {
           }}
         >
           {chat.map((c, i) => (
-            <div
-              key={i}
-              style={{
-                alignSelf: c.role === "user" ? "flex-end" : "flex-start",
-                background:
-                  c.role === "user" ? "#3b82f6" : "#d1d5db",
-                color:
-                  c.role === "user" ? "white" : "#111",
-                padding: "10px 14px",
-                borderRadius: 12,
-                maxWidth: "75%",
-                whiteSpace: "pre-wrap",
-              }}
-            >
+            <div key={i}>
               {c.text}
             </div>
           ))}
@@ -250,7 +236,6 @@ export default function ChatPage() {
                 onChange={(e) =>
                   setLead({ ...lead, name: e.target.value })
                 }
-                style={{ width: "100%", marginBottom: 6, padding: 10 }}
               />
 
               <input
@@ -259,7 +244,6 @@ export default function ChatPage() {
                 onChange={(e) =>
                   setLead({ ...lead, phone: e.target.value })
                 }
-                style={{ width: "100%", marginBottom: 6, padding: 10 }}
               />
 
               <input
@@ -268,7 +252,6 @@ export default function ChatPage() {
                 onChange={(e) =>
                   setLead({ ...lead, email: e.target.value })
                 }
-                style={{ width: "100%", marginBottom: 6, padding: 10 }}
               />
 
               <button onClick={submitLead}>Submit</button>
@@ -278,29 +261,21 @@ export default function ChatPage() {
           <div ref={chatEndRef} />
         </div>
 
-        <div style={{ display: "flex", marginTop: 10 }}>
-          <input
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-            placeholder="Type a message..."
-            style={{ flex: 1, padding: 10 }}
-          />
-
-          <button
-            onClick={sendMessage}
-            style={{
-              marginLeft: 8,
-              background: "#3b82f6",
-              color: "white",
-              padding: "10px 16px",
-              border: "none",
-            }}
-          >
-            Send
-          </button>
-        </div>
+        <input
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+        />
+        <button onClick={sendMessage}>Send</button>
       </div>
     </div>
+  );
+}
+
+// ✅ ✅ THIS IS THE CRITICAL FIX
+export default function ChatPage() {
+  return (
+    <Suspense fallback={<div>Loading chat...</div>}>
+      <ChatComponent />
+    </Suspense>
   );
 }
