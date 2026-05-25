@@ -9,16 +9,23 @@ export default function LoginPage() {
   function handleLogin() {
     const clients = JSON.parse(localStorage.getItem("clients") || "[]");
 
-    // ✅ ADDED: normalize values
+    console.log("Stored clients:", clients);
+
     const cleanUsername = username.trim().toLowerCase();
     const cleanPassword = password.trim();
 
-    const client = clients.find(
-      (c: any) =>
-        c.login &&
-        c.login.username?.toLowerCase() === cleanUsername &&
-        c.login.password === cleanPassword
-    );
+    const client = clients.find((c: any) => {
+      if (!c.login) return false;
+
+      console.log("Checking:", c.login);
+
+      return (
+        c.login.username?.toLowerCase().trim() === cleanUsername &&
+        c.login.password?.trim() === cleanPassword
+      );
+    });
+
+    console.log("Matched client:", client);
 
     if (client) {
       window.location.href = "/company?client=" + client.id;
@@ -130,3 +137,4 @@ export default function LoginPage() {
     </div>
   );
 }
+``
