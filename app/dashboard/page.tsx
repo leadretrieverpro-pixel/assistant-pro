@@ -44,7 +44,6 @@ export default function DashboardPage() {
     l => selectedClient && l.clientId === selectedClient.id
   );
 
-  // ✅ FIXED CLIENT CREATION
   function addClient() {
     if (!clientName.trim()) return;
 
@@ -52,7 +51,7 @@ export default function DashboardPage() {
       id: Date.now().toString(),
       name: clientName,
       faqs: [],
-      contact: { phone: "", email: "" }, // ✅ FIXED
+      contact: { phone: "", email: "" },
       login: { username: "", password: "" }
     };
 
@@ -60,7 +59,6 @@ export default function DashboardPage() {
 
     setClients(updated);
     localStorage.setItem("clients", JSON.stringify(updated));
-
     setClientName("");
   }
 
@@ -79,6 +77,7 @@ export default function DashboardPage() {
 
     setClients(updated);
     localStorage.setItem("clients", JSON.stringify(updated));
+    alert("Contact saved ✅");
   }
 
   function saveLogin() {
@@ -90,22 +89,9 @@ export default function DashboardPage() {
 
     setClients(updated);
     localStorage.setItem("clients", JSON.stringify(updated));
+    alert("Login saved ✅");
   }
 
-  function deleteLead(lead: any) {
-    const updated = leads.filter(
-      l =>
-        !(l.name === lead.name &&
-          l.phone === lead.phone &&
-          l.clientId === lead.clientId &&
-          l.timestamp === lead.timestamp)
-    );
-
-    setLeads(updated);
-    localStorage.setItem("leads", JSON.stringify(updated));
-  }
-
-  // ✅ FIXED FAQ ADD
   function addFAQ() {
     if (!faqQuestion || !faqAnswer || !selectedClient) return;
 
@@ -128,7 +114,6 @@ export default function DashboardPage() {
     setFaqAnswer("");
   }
 
-  // ✅ FIXED FAQ DELETE
   function deleteFAQ(index: number) {
     const updatedClients = clients.map(c => {
       if (c.id === selectedClientId) {
@@ -160,49 +145,14 @@ export default function DashboardPage() {
           style={{ width: "100%", padding: 8, marginBottom: 8 }}
         />
 
-        <button
-          onClick={addClient}
-          style={{
-            width: "100%",
-            background: "#3b82f6",
-            color: "white",
-            padding: 10,
-            border: "none",
-            borderRadius: 6
-          }}
-        >
+        <button onClick={addClient} style={{ width: "100%", padding: 10 }}>
           Add
         </button>
 
         {clients.map(client => (
-          <div
-            key={client.id}
-            onClick={() => setSelectedClientId(client.id)}
-            style={{
-              marginTop: 12,
-              padding: 10,
-              borderRadius: 8,
-              background: selectedClientId === client.id ? "#3b82f6" : "#1f2937"
-            }}
-          >
-            <div style={{ fontWeight: "bold", marginBottom: 6 }}>
-              {client.name}
-            </div>
-
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                copyChatLink(client.id);
-              }}
-              style={{
-                width: "100%",
-                background: "#3b82f6",
-                color: "white",
-                padding: 6,
-                borderRadius: 6,
-                border: "none"
-              }}
-            >
+          <div key={client.id} onClick={() => setSelectedClientId(client.id)} style={{ marginTop: 10 }}>
+            {client.name}
+            <button onClick={(e) => { e.stopPropagation(); copyChatLink(client.id); }}>
               Copy Link
             </button>
           </div>
@@ -210,67 +160,80 @@ export default function DashboardPage() {
       </div>
 
       {/* MAIN */}
-      <div style={{ flex: 1, padding: 30, background: "#f3f4f6", color: "#111" }}>
+      <div style={{ flex: 1, padding: 30 }}>
         {!selectedClient ? (
           <h2>Select a client</h2>
         ) : (
           <>
-            <h2 style={{ marginBottom: 20 }}>{selectedClient.name}</h2>
+            <h2>{selectedClient.name}</h2>
 
-            <div style={{ marginBottom: 20 }}>
+            {/* TABS */}
+            <div>
               {["leads", "info", "contact", "login"].map(tab => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  style={{
-                    marginRight: 10,
-                    padding: "8px 14px",
-                    borderRadius: 20,
-                    border: "none",
-                    background: activeTab === tab ? "#3b82f6" : "#d1d5db",
-                    color: activeTab === tab ? "white" : "#111"
-                  }}
-                >
+                <button key={tab} onClick={() => setActiveTab(tab)}>
                   {tab}
                 </button>
               ))}
             </div>
 
-            <div style={{ background: "white", padding: 20, borderRadius: 12 }}>
+            {/* CONTENT */}
+            <div style={{ marginTop: 20 }}>
 
-              {activeTab === "leads" &&
-                clientLeads.map((lead, i) => (
-                  <div key={i}>
-                    <strong>{lead.name}</strong> - {lead.phone}
-                  </div>
-                ))
-              }
-
+              {/* ✅ INFO */}
               {activeTab === "info" && (
                 <>
-                  <input
-                    placeholder="Question"
-                    value={faqQuestion}
-                    onChange={(e) => setFaqQuestion(e.target.value)}
-                    style={{ width: "100%", marginBottom: 8 }}
-                  />
-
-                  <input
-                    placeholder="Answer"
-                    value={faqAnswer}
-                    onChange={(e) => setFaqAnswer(e.target.value)}
-                    style={{ width: "100%", marginBottom: 8 }}
-                  />
-
+                  <input value={faqQuestion} onChange={(e) => setFaqQuestion(e.target.value)} placeholder="Question" />
+                  <input value={faqAnswer} onChange={(e) => setFaqAnswer(e.target.value)} placeholder="Answer" />
                   <button onClick={addFAQ}>Add FAQ</button>
 
                   {(selectedClient.faqs || []).map((faq, i) => (
                     <div key={i}>
-                      <strong>{faq.question}</strong>
-                      <div>{faq.answer}</div>
+                      {faq.question}
                       <button onClick={() => deleteFAQ(i)}>Delete</button>
                     </div>
                   ))}
+                </>
+              )}
+
+              {/* ✅ CONTACT FIXED */}
+              {activeTab === "contact" && (
+                <>
+                  <input
+                    placeholder="Phone"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                  />
+
+                  <input
+                    placeholder="Email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+
+                  <button onClick={saveContact}>
+                    Save Contact
+                  </button>
+                </>
+              )}
+
+              {/* ✅ LOGIN FIXED */}
+              {activeTab === "login" && (
+                <>
+                  <input
+                    placeholder="Username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                  />
+
+                  <input
+                    placeholder="Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+
+                  <button onClick={saveLogin}>
+                    Save Login
+                  </button>
                 </>
               )}
 
