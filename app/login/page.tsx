@@ -9,10 +9,15 @@ export default function LoginPage() {
   function handleLogin() {
     const clients = JSON.parse(localStorage.getItem("clients") || "[]");
 
+    // ✅ ADDED: normalize values
+    const cleanUsername = username.trim().toLowerCase();
+    const cleanPassword = password.trim();
+
     const client = clients.find(
       (c: any) =>
-        c.login?.username === username &&
-        c.login?.password === password
+        c.login &&
+        c.login.username?.toLowerCase() === cleanUsername &&
+        c.login.password === cleanPassword
     );
 
     if (client) {
