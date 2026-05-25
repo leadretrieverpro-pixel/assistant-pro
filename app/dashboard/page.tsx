@@ -108,7 +108,10 @@ export default function DashboardPage() {
       c.id === selectedClient.id
         ? {
             ...c,
-            faqs: [...(c.faqs || []), { question: faqQuestion, answer: faqAnswer }]
+            faqs: [...(c.faqs || []), {
+              question: faqQuestion,
+              answer: faqAnswer
+            }]
           }
         : c
     );
@@ -180,7 +183,7 @@ export default function DashboardPage() {
               background: selectedClientId === client.id ? "#3b82f6" : "#1f2937"
             }}
           >
-            <div style={{ marginBottom: 6 }}>{client.name}</div>
+            <div>{client.name}</div>
 
             <button
               onClick={(e) => {
@@ -189,6 +192,7 @@ export default function DashboardPage() {
               }}
               style={{
                 width: "100%",
+                marginTop: 6,
                 background: "#1d4ed8",
                 color: "white",
                 padding: 6,
@@ -210,7 +214,6 @@ export default function DashboardPage() {
           <>
             <h2>{selectedClient.name}</h2>
 
-            {/* TABS */}
             <div style={{ marginBottom: 20 }}>
               {["leads", "info", "contact", "login"].map(tab => (
                 <button
@@ -230,46 +233,12 @@ export default function DashboardPage() {
               ))}
             </div>
 
-            {/* CONTENT */}
             <div style={{
               background: "white",
               padding: 20,
               borderRadius: 12,
               border: "1px solid #ddd"
             }}>
-
-              {/* LEADS */}
-              {activeTab === "leads" && (
-                <>
-                  {clientLeads.length === 0 ? (
-                    <p>No leads yet</p>
-                  ) : (
-                    clientLeads.map((lead, i) => (
-                      <div key={i} style={{
-                        border: "2px solid #3b82f6",
-                        padding: 12,
-                        borderRadius: 10,
-                        marginBottom: 10
-                      }}>
-                        <strong>{lead.name}</strong>
-                        <div>{lead.phone}</div>
-                        <button
-                          onClick={() => deleteLead(lead)}
-                          style={{
-                            marginTop: 6,
-                            background: "#ef4444",
-                            color: "white",
-                            padding: "6px 10px",
-                            borderRadius: 6
-                          }}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    ))
-                  )}
-                </>
-              )}
 
               {/* INFO */}
               {activeTab === "info" && (
@@ -292,60 +261,42 @@ export default function DashboardPage() {
 
                   <button
                     onClick={addFAQ}
-                    style={{ background: "#3b82f6", color: "white", padding: 10, borderRadius: 6 }}
+                    style={{ background: "#3b82f6", color: "white", padding: 10, borderRadius: 6, marginBottom: 20 }}
                   >
                     Add FAQ
                   </button>
-                </>
-              )}
 
-              {/* CONTACT */}
-              {activeTab === "contact" && (
-                <>
-                  <h3>Contact Info</h3>
+                  <h3>Saved FAQs</h3>
 
-                  <input
-                    placeholder="Phone"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    style={{ width: "100%", padding: 10, marginBottom: 10, border: "1px solid #ccc", borderRadius: 6 }}
-                  />
+                  {(selectedClient.faqs || []).length === 0 ? (
+                    <p>No FAQs yet</p>
+                  ) : (
+                    (selectedClient.faqs || []).map((faq, i) => (
+                      <div key={i} style={{
+                        border: "2px solid #3b82f6",
+                        padding: 12,
+                        borderRadius: 10,
+                        marginBottom: 10
+                      }}>
+                        <strong>{faq.question}</strong>
+                        <div>{faq.answer}</div>
 
-                  <input
-                    placeholder="Email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    style={{ width: "100%", padding: 10, marginBottom: 10, border: "1px solid #ccc", borderRadius: 6 }}
-                  />
-
-                  <button onClick={saveContact} style={{ background: "#3b82f6", color: "white", padding: 10, borderRadius: 6 }}>
-                    Save Contact
-                  </button>
-                </>
-              )}
-
-              {/* LOGIN */}
-              {activeTab === "login" && (
-                <>
-                  <h3>Login Info</h3>
-
-                  <input
-                    placeholder="Username"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    style={{ width: "100%", padding: 10, marginBottom: 10, border: "1px solid #ccc", borderRadius: 6 }}
-                  />
-
-                  <input
-                    placeholder="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    style={{ width: "100%", padding: 10, marginBottom: 10, border: "1px solid #ccc", borderRadius: 6 }}
-                  />
-
-                  <button onClick={saveLogin} style={{ background: "#3b82f6", color: "white", padding: 10, borderRadius: 6 }}>
-                    Save Login
-                  </button>
+                        <button
+                          onClick={() => deleteFAQ(i)}
+                          style={{
+                            marginTop: 6,
+                            background: "#ef4444",
+                            color: "white",
+                            padding: "6px 10px",
+                            borderRadius: 6,
+                            border: "none"
+                          }}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    ))
+                  )}
                 </>
               )}
 
