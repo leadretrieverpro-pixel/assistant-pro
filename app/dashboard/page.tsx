@@ -86,7 +86,7 @@ export default function DashboardPage() {
     alert("Saved ✅");
   }
 
-  // ✅ ✅ FIXED SAVE LOGIN (IMPORTANT)
+  // ✅ ✅ ✅ ONLY CHANGE BELOW (LOGIN FIX)
   function saveLogin() {
     const cleanUsername = username.trim();
     const cleanPassword = password.trim();
@@ -120,7 +120,7 @@ export default function DashboardPage() {
     alert("Saved ✅");
   }
 
-  // ✅ DELETE LEAD
+  // ✅ LEAD DELETE
   function deleteLead(lead: any) {
     const updated = leads.filter(
       l =>
@@ -134,7 +134,7 @@ export default function DashboardPage() {
     localStorage.setItem("leads", JSON.stringify(updated));
   }
 
-  // ✅ ADD FAQ
+  // ✅ FAQ ADD
   function addFAQ() {
     if (!faqQuestion || !faqAnswer || !selectedClient) return;
 
@@ -154,7 +154,7 @@ export default function DashboardPage() {
     setFaqAnswer("");
   }
 
-  // ✅ DELETE FAQ
+  // ✅ FAQ DELETE
   function deleteFAQ(index: number) {
     const updated = clients.map(c => {
       if (c.id === selectedClientId) {
@@ -310,17 +310,49 @@ export default function DashboardPage() {
               {activeTab === "info" && (
                 <>
                   <h3>Add FAQ</h3>
-                  <input placeholder="Question" value={faqQuestion} onChange={(e) => setFaqQuestion(e.target.value)} style={{ width: "100%", padding: 10, marginBottom: 10, border: "1px solid #ccc", borderRadius: 6 }} />
-                  <input placeholder="Answer" value={faqAnswer} onChange={(e) => setFaqAnswer(e.target.value)} style={{ width: "100%", padding: 10, marginBottom: 10, border: "1px solid #ccc", borderRadius: 6 }} />
-                  <button onClick={addFAQ} style={{ background: "#3b82f6", color: "white", padding: 10, borderRadius: 6 }}>Add FAQ</button>
+
+                  <input
+                    placeholder="Question"
+                    value={faqQuestion}
+                    onChange={(e) => setFaqQuestion(e.target.value)}
+                    style={{ width: "100%", padding: 10, marginBottom: 10, border: "1px solid #ccc", borderRadius: 6 }}
+                  />
+
+                  <input
+                    placeholder="Answer"
+                    value={faqAnswer}
+                    onChange={(e) => setFaqAnswer(e.target.value)}
+                    style={{ width: "100%", padding: 10, marginBottom: 10, border: "1px solid #ccc", borderRadius: 6 }}
+                  />
+
+                  <button onClick={addFAQ} style={{ background: "#3b82f6", color: "white", padding: 10, borderRadius: 6 }}>
+                    Add FAQ
+                  </button>
 
                   <h3 style={{ marginTop: 20 }}>Saved FAQs</h3>
 
                   {(selectedClient.faqs || []).map((faq, i) => (
-                    <div key={i} style={{ border: "2px solid #3b82f6", padding: 12, borderRadius: 10, marginBottom: 10 }}>
+                    <div key={i} style={{
+                      border: "2px solid #3b82f6",
+                      padding: 12,
+                      borderRadius: 10,
+                      marginBottom: 10
+                    }}>
                       <strong>{faq.question}</strong>
                       <div>{faq.answer}</div>
-                      <button onClick={() => deleteFAQ(i)} style={{ marginTop: 6, background: "#ef4444", color: "white", padding: "6px 10px", borderRadius: 6 }}>Delete</button>
+
+                      <button
+                        onClick={() => deleteFAQ(i)}
+                        style={{
+                          marginTop: 6,
+                          background: "#ef4444",
+                          color: "white",
+                          padding: "6px 10px",
+                          borderRadius: 6
+                        }}
+                      >
+                        Delete
+                      </button>
                     </div>
                   ))}
                 </>
@@ -330,9 +362,14 @@ export default function DashboardPage() {
               {activeTab === "contact" && (
                 <>
                   <h3>Contact Info</h3>
+
                   <input placeholder="Phone" value={phone} onChange={(e) => setPhone(e.target.value)} style={{ width: "100%", padding: 10, marginBottom: 10, border: "1px solid #ccc", borderRadius: 6 }} />
+
                   <input placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} style={{ width: "100%", padding: 10, marginBottom: 10, border: "1px solid #ccc", borderRadius: 6 }} />
-                  <button onClick={saveContact} style={{ background: "#3b82f6", color: "white", padding: 10, borderRadius: 6 }}>Save Contact</button>
+
+                  <button onClick={saveContact} style={{ background: "#3b82f6", color: "white", padding: 10, borderRadius: 6 }}>
+                    Save Contact
+                  </button>
                 </>
               )}
 
@@ -340,9 +377,14 @@ export default function DashboardPage() {
               {activeTab === "login" && (
                 <>
                   <h3>Login Info</h3>
+
                   <input placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} style={{ width: "100%", padding: 10, marginBottom: 10, border: "1px solid #ccc", borderRadius: 6 }} />
+
                   <input placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} style={{ width: "100%", padding: 10, marginBottom: 10, border: "1px solid #ccc", borderRadius: 6 }} />
-                  <button onClick={saveLogin} style={{ background: "#3b82f6", color: "white", padding: 10, borderRadius: 6 }}>Save Login</button>
+
+                  <button onClick={saveLogin} style={{ background: "#3b82f6", color: "white", padding: 10, borderRadius: 6 }}>
+                    Save Login
+                  </button>
                 </>
               )}
 
@@ -353,3 +395,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+``
