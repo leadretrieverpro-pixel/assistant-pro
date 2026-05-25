@@ -58,6 +58,12 @@ export default function DashboardPage() {
     setClientName("");
   }
 
+  function copyChatLink(clientId: string) {
+    const link = window.location.origin + "/chat?client=" + clientId;
+    navigator.clipboard.writeText(link);
+    alert("Copied ✅");
+  }
+
   function saveContact() {
     const updated = clients.map(c =>
       c.id === selectedClientId
@@ -80,6 +86,19 @@ export default function DashboardPage() {
     setClients(updated);
     localStorage.setItem("clients", JSON.stringify(updated));
     alert("Saved ✅");
+  }
+
+  function deleteLead(lead: any) {
+    const updated = leads.filter(
+      l =>
+        !(l.name === lead.name &&
+          l.phone === lead.phone &&
+          l.clientId === lead.clientId &&
+          l.timestamp === lead.timestamp)
+    );
+
+    setLeads(updated);
+    localStorage.setItem("leads", JSON.stringify(updated));
   }
 
   function addFAQ() {
@@ -131,7 +150,9 @@ export default function DashboardPage() {
             padding: 10,
             marginBottom: 10,
             borderRadius: 6,
-            border: "1px solid #ccc"
+            border: "1px solid #444",
+            background: "#222",
+            color: "white"
           }}
         />
 
@@ -142,8 +163,7 @@ export default function DashboardPage() {
             background: "#3b82f6",
             color: "white",
             padding: 10,
-            borderRadius: 6,
-            border: "none"
+            borderRadius: 6
           }}
         >
           Add Client
@@ -157,11 +177,27 @@ export default function DashboardPage() {
               marginTop: 12,
               padding: 10,
               borderRadius: 8,
-              background: selectedClientId === client.id ? "#3b82f6" : "#1f2937",
-              cursor: "pointer"
+              background: selectedClientId === client.id ? "#3b82f6" : "#1f2937"
             }}
           >
-            {client.name}
+            <div style={{ marginBottom: 6 }}>{client.name}</div>
+
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                copyChatLink(client.id);
+              }}
+              style={{
+                width: "100%",
+                background: "#1d4ed8",
+                color: "white",
+                padding: 6,
+                borderRadius: 6,
+                border: "2px solid black"
+              }}
+            >
+              Copy Link
+            </button>
           </div>
         ))}
       </div>
@@ -184,11 +220,9 @@ export default function DashboardPage() {
                     marginRight: 10,
                     padding: "8px 14px",
                     borderRadius: 20,
-                    border: "none",
-                    background:
-                      activeTab === tab ? "#3b82f6" : "#d1d5db",
-                    color:
-                      activeTab === tab ? "white" : "#111"
+                    background: activeTab === tab ? "#3b82f6" : "#d1d5db",
+                    color: activeTab === tab ? "white" : "#111",
+                    border: "none"
                   }}
                 >
                   {tab}
@@ -196,7 +230,7 @@ export default function DashboardPage() {
               ))}
             </div>
 
-            {/* CONTENT CARD */}
+            {/* CONTENT */}
             <div style={{
               background: "white",
               padding: 20,
@@ -204,7 +238,40 @@ export default function DashboardPage() {
               border: "1px solid #ddd"
             }}>
 
-              {/* ✅ INFO */}
+              {/* LEADS */}
+              {activeTab === "leads" && (
+                <>
+                  {clientLeads.length === 0 ? (
+                    <p>No leads yet</p>
+                  ) : (
+                    clientLeads.map((lead, i) => (
+                      <div key={i} style={{
+                        border: "2px solid #3b82f6",
+                        padding: 12,
+                        borderRadius: 10,
+                        marginBottom: 10
+                      }}>
+                        <strong>{lead.name}</strong>
+                        <div>{lead.phone}</div>
+                        <button
+                          onClick={() => deleteLead(lead)}
+                          style={{
+                            marginTop: 6,
+                            background: "#ef4444",
+                            color: "white",
+                            padding: "6px 10px",
+                            borderRadius: 6
+                          }}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </>
+              )}
+
+              {/* INFO */}
               {activeTab === "info" && (
                 <>
                   <h3>Add FAQ</h3>
@@ -213,127 +280,70 @@ export default function DashboardPage() {
                     placeholder="Question"
                     value={faqQuestion}
                     onChange={(e) => setFaqQuestion(e.target.value)}
-                    style={{
-                      width: "100%",
-                      marginBottom: 10,
-                      padding: 10,
-                      border: "1px solid #ccc",
-                      borderRadius: 6
-                    }}
+                    style={{ width: "100%", padding: 10, marginBottom: 10, border: "1px solid #ccc", borderRadius: 6 }}
                   />
 
                   <input
                     placeholder="Answer"
                     value={faqAnswer}
                     onChange={(e) => setFaqAnswer(e.target.value)}
-                    style={{
-                      width: "100%",
-                      marginBottom: 10,
-                      padding: 10,
-                      border: "1px solid #ccc",
-                      borderRadius: 6
-                    }}
+                    style={{ width: "100%", padding: 10, marginBottom: 10, border: "1px solid #ccc", borderRadius: 6 }}
                   />
 
                   <button
                     onClick={addFAQ}
-                    style={{
-                      background: "#3b82f6",
-                      color: "white",
-                      padding: 10,
-                      borderRadius: 6
-                    }}
+                    style={{ background: "#3b82f6", color: "white", padding: 10, borderRadius: 6 }}
                   >
                     Add FAQ
                   </button>
                 </>
               )}
 
-              {/* ✅ CONTACT */}
+              {/* CONTACT */}
               {activeTab === "contact" && (
                 <>
                   <h3>Contact Info</h3>
 
-                  <label>Phone</label>
                   <input
+                    placeholder="Phone"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    style={{
-                      width: "100%",
-                      marginBottom: 10,
-                      padding: 10,
-                      border: "1px solid #ccc",
-                      borderRadius: 6
-                    }}
+                    style={{ width: "100%", padding: 10, marginBottom: 10, border: "1px solid #ccc", borderRadius: 6 }}
                   />
 
-                  <label>Email</label>
                   <input
+                    placeholder="Email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    style={{
-                      width: "100%",
-                      marginBottom: 10,
-                      padding: 10,
-                      border: "1px solid #ccc",
-                      borderRadius: 6
-                    }}
+                    style={{ width: "100%", padding: 10, marginBottom: 10, border: "1px solid #ccc", borderRadius: 6 }}
                   />
 
-                  <button
-                    onClick={saveContact}
-                    style={{
-                      background: "#3b82f6",
-                      color: "white",
-                      padding: 10,
-                      borderRadius: 6
-                    }}
-                  >
+                  <button onClick={saveContact} style={{ background: "#3b82f6", color: "white", padding: 10, borderRadius: 6 }}>
                     Save Contact
                   </button>
                 </>
               )}
 
-              {/* ✅ LOGIN */}
+              {/* LOGIN */}
               {activeTab === "login" && (
                 <>
-                  <h3>Client Login</h3>
+                  <h3>Login Info</h3>
 
-                  <label>Username</label>
                   <input
+                    placeholder="Username"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    style={{
-                      width: "100%",
-                      marginBottom: 10,
-                      padding: 10,
-                      border: "1px solid #ccc",
-                      borderRadius: 6
-                    }}
+                    style={{ width: "100%", padding: 10, marginBottom: 10, border: "1px solid #ccc", borderRadius: 6 }}
                   />
 
-                  <label>Password</label>
                   <input
+                    placeholder="Password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    style={{
-                      width: "100%",
-                      marginBottom: 10,
-                      padding: 10,
-                      border: "1px solid #ccc",
-                      borderRadius: 6
-                    }}
+                    style={{ width: "100%", padding: 10, marginBottom: 10, border: "1px solid #ccc", borderRadius: 6 }}
                   />
 
-                  <button
-                    onClick={saveLogin}
-                    style={{
-                      background: "#3b82f6",
-                      color: "white",
-                      padding: 10,
-                      borderRadius: 6
-                    }}
-                  >
+                  <button onClick={saveLogin} style={{ background: "#3b82f6", color: "white", padding: 10, borderRadius: 6 }}>
                     Save Login
                   </button>
                 </>
@@ -346,4 +356,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-``
