@@ -20,11 +20,8 @@ export default function DashboardPage() {
   const [password, setPassword] = useState("");
 
   useEffect(() => {
-    const storedClients = JSON.parse(localStorage.getItem("clients") || "[]");
-    const storedLeads = JSON.parse(localStorage.getItem("leads") || "[]");
-
-    setClients(storedClients);
-    setLeads(storedLeads);
+    setClients(JSON.parse(localStorage.getItem("clients") || "[]"));
+    setLeads(JSON.parse(localStorage.getItem("leads") || "[]"));
   }, []);
 
   const selectedClient = clients.find(
@@ -89,10 +86,23 @@ export default function DashboardPage() {
     localStorage.setItem("clients", JSON.stringify(updated));
   }
 
+  function deleteLead(lead: any) {
+    const updated = leads.filter(
+      l =>
+        !(l.name === lead.name &&
+          l.phone === lead.phone &&
+          l.clientId === lead.clientId &&
+          l.timestamp === lead.timestamp)
+    );
+
+    setLeads(updated);
+    localStorage.setItem("leads", JSON.stringify(updated));
+  }
+
   function addFAQ() {
     if (!faqQuestion || !faqAnswer || !selectedClient) return;
 
-    const updatedClients = clients.map(c =>
+    const updated = clients.map(c =>
       c.id === selectedClient.id
         ? {
             ...c,
@@ -101,18 +111,15 @@ export default function DashboardPage() {
         : c
     );
 
-    setClients(updatedClients);
-    localStorage.setItem("clients", JSON.stringify(updatedClients));
-
-    setSelectedClientId(null);
-    setTimeout(() => setSelectedClientId(selectedClient.id), 0);
+    setClients(updated);
+    localStorage.setItem("clients", JSON.stringify(updated));
 
     setFaqQuestion("");
     setFaqAnswer("");
   }
 
   function deleteFAQ(index: number) {
-    const updatedClients = clients.map(c => {
+    const updated = clients.map(c => {
       if (c.id === selectedClientId) {
         const newFaqs = [...(c.faqs || [])];
         newFaqs.splice(index, 1);
@@ -121,12 +128,12 @@ export default function DashboardPage() {
       return c;
     });
 
-    setClients(updatedClients);
-    localStorage.setItem("clients", JSON.stringify(updatedClients));
+    setClients(updated);
+    localStorage.setItem("clients", JSON.stringify(updated));
   }
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh", fontFamily: "Arial" }}>
+    <div style={{ display: "flex", minHeight: "100vh", fontFamily: "Arial", color: "#111" }}>
 
       {/* SIDEBAR */}
       <div style={{ width: 260, background: "#111", color: "white", padding: 20 }}>
@@ -136,12 +143,7 @@ export default function DashboardPage() {
           placeholder="New client"
           value={clientName}
           onChange={(e) => setClientName(e.target.value)}
-          style={{
-            width: "100%",
-            padding: 8,
-            marginBottom: 8,
-            borderRadius: 6
-          }}
+          style={{ width: "100%", padding: 8, marginBottom: 8 }}
         />
 
         <button
@@ -181,11 +183,11 @@ export default function DashboardPage() {
               }}
               style={{
                 width: "100%",
-                background: "#3b82f6",
+                background: "#1d4ed8", // ✅ darker blue
                 color: "white",
                 padding: 6,
                 borderRadius: 6,
-                border: "none"
+                border: "2px solid black" // ✅ border added
               }}
             >
               Copy Link
@@ -202,7 +204,7 @@ export default function DashboardPage() {
           <>
             <h2>{selectedClient.name}</h2>
 
-            {/* ✅ FIXED TABS */}
+            {/* TABS */}
             <div style={{ marginBottom: 20 }}>
               {["leads", "info", "contact", "login"].map(tab => (
                 <button
@@ -226,6 +228,45 @@ export default function DashboardPage() {
 
             <div style={{ background: "white", padding: 20, borderRadius: 12 }}>
 
+              {/* ✅ FIXED LEADS */}
+              {activeTab === "leads" && (
+                <>
+                  {clientLeads.length === 0 ? (
+                    <p>No leads yet</p>
+                  ) : (
+                    clientLeads
+                      .slice()
+                      .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
+                      .map((lead, i) => (
+                        <div key={i} style={{
+                          border: "2px solid #3b82f6",
+                          padding: 12,
+                          borderRadius: 10,
+                          marginBottom: 10
+                        }}>
+                          <strong>{lead.name}</strong>
+                          <div>{lead.phone}</div>
+                          {lead.email && <div>{lead.email}</div>}
+
+                          <button
+                            onClick={() => deleteLead(lead)}
+                            style={{
+                              marginTop: 6,
+                              background: "#ef4444",
+                              color: "white",
+                              padding: "6px 10px",
+                              borderRadius: 6,
+                              border: "none"
+                            }}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      ))
+                  )}
+                </>
+              )}
+
               {/* ✅ INFO */}
               {activeTab === "info" && (
                 <>
@@ -233,115 +274,38 @@ export default function DashboardPage() {
                     placeholder="Question"
                     value={faqQuestion}
                     onChange={(e) => setFaqQuestion(e.target.value)}
-                    style={{ width: "100%", marginBottom: 8, padding: 10 }}
                   />
 
                   <input
                     placeholder="Answer"
                     value={faqAnswer}
                     onChange={(e) => setFaqAnswer(e.target.value)}
-                    style={{ width: "100%", marginBottom: 8, padding: 10 }}
                   />
 
-                  <button
-                    onClick={addFAQ}
-                    style={{
-                      background: "#3b82f6",
-                      color: "white",
-                      padding: 10,
-                      borderRadius: 6
-                    }}
-                  >
-                    Add FAQ
-                  </button>
+                  <button onClick={addFAQ}>Add FAQ</button>
 
                   {(selectedClient.faqs || []).map((faq, i) => (
-                    <div key={i} style={{
-                      marginTop: 10,
-                      border: "2px solid #3b82f6",
-                      padding: 10,
-                      borderRadius: 8
-                    }}>
+                    <div key={i}>
                       <strong>{faq.question}</strong>
-                      <div>{faq.answer}</div>
-
-                      <button
-                        onClick={() => deleteFAQ(i)}
-                        style={{
-                          marginTop: 6,
-                          background: "#ef4444",
-                          color: "white",
-                          padding: "6px 10px",
-                          borderRadius: 6,
-                          border: "none"
-                        }}
-                      >
-                        Delete
-                      </button>
+                      <button onClick={() => deleteFAQ(i)}>Delete</button>
                     </div>
                   ))}
                 </>
               )}
 
-              {/* ✅ CONTACT */}
               {activeTab === "contact" && (
                 <>
-                  <input
-                    placeholder="Phone"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    style={{ width: "100%", marginBottom: 8, padding: 10 }}
-                  />
-
-                  <input
-                    placeholder="Email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    style={{ width: "100%", marginBottom: 8, padding: 10 }}
-                  />
-
-                  <button
-                    onClick={saveContact}
-                    style={{
-                      background: "#3b82f6",
-                      color: "white",
-                      padding: 10,
-                      borderRadius: 6
-                    }}
-                  >
-                    Save Contact
-                  </button>
+                  <input value={phone} onChange={(e) => setPhone(e.target.value)} />
+                  <input value={email} onChange={(e) => setEmail(e.target.value)} />
+                  <button onClick={saveContact}>Save Contact</button>
                 </>
               )}
 
-              {/* ✅ LOGIN */}
               {activeTab === "login" && (
                 <>
-                  <input
-                    placeholder="Username"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    style={{ width: "100%", marginBottom: 8, padding: 10 }}
-                  />
-
-                  <input
-                    placeholder="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    style={{ width: "100%", marginBottom: 8, padding: 10 }}
-                  />
-
-                  <button
-                    onClick={saveLogin}
-                    style={{
-                      background: "#3b82f6",
-                      color: "white",
-                      padding: 10,
-                      borderRadius: 6
-                    }}
-                  >
-                    Save Login
-                  </button>
+                  <input value={username} onChange={(e) => setUsername(e.target.value)} />
+                  <input value={password} onChange={(e) => setPassword(e.target.value)} />
+                  <button onClick={saveLogin}>Save Login</button>
                 </>
               )}
 
@@ -352,4 +316,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-``
