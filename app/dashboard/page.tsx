@@ -56,7 +56,6 @@ export default function DashboardPage() {
     };
 
     const updated = [...clients, newClient];
-
     setClients(updated);
     localStorage.setItem("clients", JSON.stringify(updated));
     setClientName("");
@@ -77,7 +76,6 @@ export default function DashboardPage() {
 
     setClients(updated);
     localStorage.setItem("clients", JSON.stringify(updated));
-    alert("Contact saved ✅");
   }
 
   function saveLogin() {
@@ -89,7 +87,6 @@ export default function DashboardPage() {
 
     setClients(updated);
     localStorage.setItem("clients", JSON.stringify(updated));
-    alert("Login saved ✅");
   }
 
   function addFAQ() {
@@ -126,9 +123,6 @@ export default function DashboardPage() {
 
     setClients(updatedClients);
     localStorage.setItem("clients", JSON.stringify(updatedClients));
-
-    setSelectedClientId(null);
-    setTimeout(() => setSelectedClientId(selectedClientId), 0);
   }
 
   return (
@@ -142,17 +136,58 @@ export default function DashboardPage() {
           placeholder="New client"
           value={clientName}
           onChange={(e) => setClientName(e.target.value)}
-          style={{ width: "100%", padding: 8, marginBottom: 8 }}
+          style={{
+            width: "100%",
+            padding: 8,
+            marginBottom: 8,
+            borderRadius: 6
+          }}
         />
 
-        <button onClick={addClient} style={{ width: "100%", padding: 10 }}>
-          Add
+        <button
+          onClick={addClient}
+          style={{
+            width: "100%",
+            background: "#3b82f6",
+            color: "white",
+            padding: 10,
+            border: "none",
+            borderRadius: 6
+          }}
+        >
+          Add Client
         </button>
 
         {clients.map(client => (
-          <div key={client.id} onClick={() => setSelectedClientId(client.id)} style={{ marginTop: 10 }}>
-            {client.name}
-            <button onClick={(e) => { e.stopPropagation(); copyChatLink(client.id); }}>
+          <div
+            key={client.id}
+            onClick={() => setSelectedClientId(client.id)}
+            style={{
+              marginTop: 12,
+              padding: 10,
+              borderRadius: 8,
+              background: selectedClientId === client.id ? "#3b82f6" : "#1f2937",
+              cursor: "pointer"
+            }}
+          >
+            <div style={{ fontWeight: "bold", marginBottom: 6 }}>
+              {client.name}
+            </div>
+
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                copyChatLink(client.id);
+              }}
+              style={{
+                width: "100%",
+                background: "#3b82f6",
+                color: "white",
+                padding: 6,
+                borderRadius: 6,
+                border: "none"
+              }}
+            >
               Copy Link
             </button>
           </div>
@@ -160,78 +195,151 @@ export default function DashboardPage() {
       </div>
 
       {/* MAIN */}
-      <div style={{ flex: 1, padding: 30 }}>
+      <div style={{ flex: 1, padding: 30, background: "#f3f4f6" }}>
         {!selectedClient ? (
           <h2>Select a client</h2>
         ) : (
           <>
             <h2>{selectedClient.name}</h2>
 
-            {/* TABS */}
-            <div>
+            {/* ✅ FIXED TABS */}
+            <div style={{ marginBottom: 20 }}>
               {["leads", "info", "contact", "login"].map(tab => (
-                <button key={tab} onClick={() => setActiveTab(tab)}>
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  style={{
+                    marginRight: 10,
+                    padding: "8px 14px",
+                    borderRadius: 20,
+                    border: "none",
+                    background:
+                      activeTab === tab ? "#3b82f6" : "#d1d5db",
+                    color:
+                      activeTab === tab ? "white" : "#111"
+                  }}
+                >
                   {tab}
                 </button>
               ))}
             </div>
 
-            {/* CONTENT */}
-            <div style={{ marginTop: 20 }}>
+            <div style={{ background: "white", padding: 20, borderRadius: 12 }}>
 
               {/* ✅ INFO */}
               {activeTab === "info" && (
                 <>
-                  <input value={faqQuestion} onChange={(e) => setFaqQuestion(e.target.value)} placeholder="Question" />
-                  <input value={faqAnswer} onChange={(e) => setFaqAnswer(e.target.value)} placeholder="Answer" />
-                  <button onClick={addFAQ}>Add FAQ</button>
+                  <input
+                    placeholder="Question"
+                    value={faqQuestion}
+                    onChange={(e) => setFaqQuestion(e.target.value)}
+                    style={{ width: "100%", marginBottom: 8, padding: 10 }}
+                  />
+
+                  <input
+                    placeholder="Answer"
+                    value={faqAnswer}
+                    onChange={(e) => setFaqAnswer(e.target.value)}
+                    style={{ width: "100%", marginBottom: 8, padding: 10 }}
+                  />
+
+                  <button
+                    onClick={addFAQ}
+                    style={{
+                      background: "#3b82f6",
+                      color: "white",
+                      padding: 10,
+                      borderRadius: 6
+                    }}
+                  >
+                    Add FAQ
+                  </button>
 
                   {(selectedClient.faqs || []).map((faq, i) => (
-                    <div key={i}>
-                      {faq.question}
-                      <button onClick={() => deleteFAQ(i)}>Delete</button>
+                    <div key={i} style={{
+                      marginTop: 10,
+                      border: "2px solid #3b82f6",
+                      padding: 10,
+                      borderRadius: 8
+                    }}>
+                      <strong>{faq.question}</strong>
+                      <div>{faq.answer}</div>
+
+                      <button
+                        onClick={() => deleteFAQ(i)}
+                        style={{
+                          marginTop: 6,
+                          background: "#ef4444",
+                          color: "white",
+                          padding: "6px 10px",
+                          borderRadius: 6,
+                          border: "none"
+                        }}
+                      >
+                        Delete
+                      </button>
                     </div>
                   ))}
                 </>
               )}
 
-              {/* ✅ CONTACT FIXED */}
+              {/* ✅ CONTACT */}
               {activeTab === "contact" && (
                 <>
                   <input
                     placeholder="Phone"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
+                    style={{ width: "100%", marginBottom: 8, padding: 10 }}
                   />
 
                   <input
                     placeholder="Email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    style={{ width: "100%", marginBottom: 8, padding: 10 }}
                   />
 
-                  <button onClick={saveContact}>
+                  <button
+                    onClick={saveContact}
+                    style={{
+                      background: "#3b82f6",
+                      color: "white",
+                      padding: 10,
+                      borderRadius: 6
+                    }}
+                  >
                     Save Contact
                   </button>
                 </>
               )}
 
-              {/* ✅ LOGIN FIXED */}
+              {/* ✅ LOGIN */}
               {activeTab === "login" && (
                 <>
                   <input
                     placeholder="Username"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
+                    style={{ width: "100%", marginBottom: 8, padding: 10 }}
                   />
 
                   <input
                     placeholder="Password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    style={{ width: "100%", marginBottom: 8, padding: 10 }}
                   />
 
-                  <button onClick={saveLogin}>
+                  <button
+                    onClick={saveLogin}
+                    style={{
+                      background: "#3b82f6",
+                      color: "white",
+                      padding: 10,
+                      borderRadius: 6
+                    }}
+                  >
                     Save Login
                   </button>
                 </>
@@ -244,3 +352,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+``
