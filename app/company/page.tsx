@@ -2,6 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { supabase } from "../lib/supabase";
 
 export default function CompanyPage() {
   const params = useSearchParams();
@@ -25,24 +26,37 @@ export default function CompanyPage() {
   }
 
   // ✅ LOAD DATA
-  useEffect(() => {
-    const clients = JSON.parse(localStorage.getItem("clients") || "[]");
-    const allLeads = JSON.parse(localStorage.getItem("leads") || "[]");
+useEffect(() => {
+  async function loadClient() {
+    if (!clientId) return;
 
-    const foundClient = clients.find((c: any) => c.id === clientId);
-    setClient(foundClient);
+    const { data, error } = await supabase
+      .from("clients")
+      .select("*")
+      .eq("id", String(clientId)) // ✅ FIX
+      .single();
 
-    const filteredLeads = allLeads.filter(
-      (l: any) => l.clientId === clientId
-    );
+    console.log("CLIENT ID:", clientId); // ✅ debug
+    console.log("FETCH RESULT:", data, error);
 
-    setLeads(filteredLeads);
-
-    if (foundClient) {
-      setPhone(foundClient.contact?.phone || "");
-      setEmail(foundClient.contact?.email || "");
+    if (error) {
+      console.error("Error loading client:", error);
+      setClient({ name: "Error loading client" }); // ✅ prevents infinite loading
+      return;
     }
-  }, [clientId]);
+
+    if (!data) {
+      setClient({ name: "No client found" }); // ✅ prevents infinite loading
+      return;
+    }
+
+    setClient(data);
+    setPhone(data.phone || "");
+    setEmail(data.email || "");
+  }
+
+  loadClient();
+}, [clientId]);
 
   // ✅ SAVE CONTACT
   function saveContact() {
