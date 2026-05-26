@@ -34,7 +34,8 @@ useEffect(() => {
       .from("clients")
       .select("*")
       .eq("id", String(clientId)) // ✅ FIX
-      .single();
+      .maybeSingle();
+
 
     console.log("CLIENT ID:", clientId); // ✅ debug
     console.log("FETCH RESULT:", data, error);
