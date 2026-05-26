@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { supabase } from "../lib/supabase";
 
 export default function DashboardPage() {
   const [clients, setClients] = useState<any[]>([]);
@@ -19,45 +20,65 @@ export default function DashboardPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
-  // ✅ LOAD DATA
+  // ✅ LOAD CLIENTS FROM SUPABASE
   useEffect(() => {
-    setClients(JSON.parse(localStorage.getItem("clients") || "[]"));
-    setLeads(JSON.parse(localStorage.getItem("leads") || "[]"));
+    async function loadClients() {
+      const { data, error } = await supabase.from("clients").select("*");
+
+      if (error) {
+        console.error("Error loading clients:", error);
+        return;
+      }
+
+      setClients(data || []);
+    }
+
+    loadClients();
   }, []);
 
   const selectedClient = clients.find(
-    c => String(c.id) === String(selectedClientId)
+    (c) => String(c.id) === String(selectedClientId)
   );
 
-  // ✅ LOAD CLIENT DETAILS
+  // ✅ LOAD CLIENT DETAILS INTO FORM
   useEffect(() => {
-    if (selectedClient) {
-      setPhone(selectedClient.contact?.phone || "");
-      setEmail(selectedClient.contact?.email || "");
-      setUsername(selectedClient.login?.username || "");
-      setPassword(selectedClient.login?.password || "");
-    }
-  }, [selectedClient]);
+  if (selectedClient) {
+    setPhone((prev) => prev || selectedClient.phone || "");
+    setEmail((prev) => prev || selectedClient.email || "");
+    setUsername((prev) => prev || selectedClient.username || "");
+    setPassword((prev) => prev || selectedClient.password || "");
+  }
+}, [selectedClient]);
+
 
   const clientLeads = leads.filter(
-    l => selectedClient && l.clientId === selectedClient.id
+    (l) => selectedClient && l.clientId === selectedClient.id
   );
 
-  // ✅ CLIENT
-  function addClient() {
+  // ✅ ADD CLIENT (SUPABASE)
+  async function addClient() {
     if (!clientName.trim()) return;
 
-    const newClient = {
-      id: Date.now().toString(),
-      name: clientName,
-      faqs: [],
-      contact: { phone: "", email: "" },
-      login: { username: "", password: "" }
-    };
+    const { data, error } = await supabase
+      .from("clients")
+      .insert([
+        {
+          name: clientName,
+          username: "",
+          password: "",
+          phone: "",
+          email: "",
+        },
+      ])
+      .select();
 
-    const updated = [...clients, newClient];
-    setClients(updated);
-    localStorage.setItem("clients", JSON.stringify(updated));
+    if (error) {
+      console.error("Error adding client:", error);
+      alert("Error saving client");
+      return;
+    }
+
+    setClients([...(clients || []), ...(data || [])]);
     setClientName("");
   }
 
@@ -68,26 +89,32 @@ export default function DashboardPage() {
     alert("Copied ✅");
   }
 
-  // ✅ SAVE CONTACT
-  function saveContact() {
-    const updated = clients.map(c =>
-      c.id === selectedClientId
-        ? { ...c, contact: { phone, email } }
-        : c
-    );
+  // ✅ SAVE CONTACT (SUPABASE)
+  async function saveContact() {
+    if (!selectedClientId) return;
 
-    setClients(updated);
-    localStorage.setItem("clients", JSON.stringify(updated));
+    const { error } = await supabase
+      .from("clients")
+      .update({ phone, email })
+      .eq("id", String(selectedClientId));
+``
 
-    const id = selectedClientId;
-    setSelectedClientId(null);
-    setTimeout(() => setSelectedClientId(id), 0);
+    if (error) {
+      console.error(error);
+      alert("Error saving contact");
+      return;
+    }
 
-    alert("Saved ✅");
+    const { data } = await supabase.from("clients").select("*");
+setClients(data || []);
+
+alert("Saved ✅");
   }
 
-  // ✅ ✅ ✅ ONLY CHANGE BELOW (LOGIN FIX)
-  function saveLogin() {
+  // ✅ SAVE LOGIN (SUPABASE)
+  async function saveLogin() {
+    if (!selectedClientId) return;
+
     const cleanUsername = username.trim();
     const cleanPassword = password.trim();
 
@@ -96,67 +123,65 @@ export default function DashboardPage() {
       return;
     }
 
-    const updated = clients.map(c =>
-      c.id === selectedClientId
-        ? {
-            ...c,
-            login: {
-              username: cleanUsername,
-              password: cleanPassword
-            }
-          }
-        : c
-    );
+    const { error } = await supabase
+      .from("clients")
+      .update({
+        username: cleanUsername,
+        password: cleanPassword,
+      })
+      .eq("id", String(selectedClientId));
+``
 
-    setClients(updated);
-    localStorage.setItem("clients", JSON.stringify(updated));
+    if (error) {
+      console.error("Error saving login:", error);
+      alert("Error saving login");
+      return;
+    }
 
-    const id = selectedClientId;
-    setSelectedClientId(null);
-    setTimeout(() => setSelectedClientId(id), 0);
+    const { data } = await supabase.from("clients").select("*");
+setClients(data || []);
 
-    console.log("Saved login:", cleanUsername, cleanPassword);
+alert("Saved ✅");
 
-    alert("Saved ✅");
   }
 
-  // ✅ LEAD DELETE
+  // ✅ DELETE LEAD (TEMP LOCAL ONLY)
   function deleteLead(lead: any) {
     const updated = leads.filter(
-      l =>
-        !(l.name === lead.name &&
+      (l) =>
+        !(
+          l.name === lead.name &&
           l.phone === lead.phone &&
           l.clientId === lead.clientId &&
-          l.timestamp === lead.timestamp)
+          l.timestamp === lead.timestamp
+        )
     );
 
     setLeads(updated);
-    localStorage.setItem("leads", JSON.stringify(updated));
   }
 
-  // ✅ FAQ ADD
+  // ✅ FAQ ADD (TEMP LOCAL ONLY)
   function addFAQ() {
     if (!faqQuestion || !faqAnswer || !selectedClient) return;
 
-    const updated = clients.map(c =>
+    const updated = clients.map((c) =>
       c.id === selectedClient.id
         ? {
             ...c,
-            faqs: [...(c.faqs || []), { question: faqQuestion, answer: faqAnswer }]
+            faqs: [...(c.faqs || []), { question: faqQuestion, answer: faqAnswer }],
           }
         : c
     );
 
     setClients(updated);
-    localStorage.setItem("clients", JSON.stringify(updated));
 
     setFaqQuestion("");
     setFaqAnswer("");
   }
 
-  // ✅ FAQ DELETE
+  // ✅ FAQ DELETE (TEMP LOCAL ONLY)
   function deleteFAQ(index: number) {
-    const updated = clients.map(c => {
+    const updated = clients.map((c) => {
       if (c.id === selectedClientId) {
         const newFaqs = [...(c.faqs || [])];
         newFaqs.splice(index, 1);
@@ -166,12 +191,10 @@ export default function DashboardPage() {
     });
 
     setClients(updated);
-    localStorage.setItem("clients", JSON.stringify(updated));
   }
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", fontFamily: "Arial", color: "#111" }}>
-
       {/* SIDEBAR */}
       <div style={{ width: 260, background: "#111", color: "white", padding: 20 }}>
         <h2>Clients</h2>
@@ -187,7 +210,7 @@ export default function DashboardPage() {
             borderRadius: 6,
             border: "1px solid #444",
             background: "#222",
-            color: "white"
+            color: "white",
           }}
         />
 
@@ -198,13 +221,13 @@ export default function DashboardPage() {
             background: "#3b82f6",
             color: "white",
             padding: 10,
-            borderRadius: 6
+            borderRadius: 6,
           }}
         >
           Add Client
         </button>
 
-        {clients.map(client => (
+        {clients.map((client) => (
           <div
             key={client.id}
             onClick={() => setSelectedClientId(client.id)}
@@ -213,7 +236,7 @@ export default function DashboardPage() {
               padding: 10,
               borderRadius: 8,
               background: selectedClientId === client.id ? "#3b82f6" : "#1f2937",
-              cursor: "pointer"
+              cursor: "pointer",
             }}
           >
             <div>{client.name}</div>
@@ -230,7 +253,7 @@ export default function DashboardPage() {
                 color: "white",
                 padding: 6,
                 borderRadius: 6,
-                border: "2px solid black"
+                border: "2px solid black",
               }}
             >
               Copy Link
@@ -247,9 +270,8 @@ export default function DashboardPage() {
           <>
             <h2>{selectedClient.name}</h2>
 
-            {/* TABS */}
             <div style={{ marginBottom: 20 }}>
-              {["leads", "info", "contact", "login"].map(tab => (
+              {["leads", "info", "contact", "login"].map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
@@ -258,8 +280,6 @@ export default function DashboardPage() {
                     padding: "8px 14px",
                     borderRadius: 20,
                     background: activeTab === tab ? "#3b82f6" : "#d1d5db",
-                    color: activeTab === tab ? "white" : "#111",
-                    border: "none"
                   }}
                 >
                   {tab}
@@ -267,127 +287,22 @@ export default function DashboardPage() {
               ))}
             </div>
 
-            {/* CARD */}
-            <div style={{
-              background: "white",
-              padding: 20,
-              borderRadius: 12,
-              border: "1px solid #ddd"
-            }}>
-
-              {/* LEADS */}
-              {activeTab === "leads" &&
-                (clientLeads.length === 0 ? (
-                  <p>No leads yet</p>
-                ) : (
-                  clientLeads.map((lead, i) => (
-                    <div key={i} style={{
-                      border: "2px solid #3b82f6",
-                      padding: 12,
-                      borderRadius: 10,
-                      marginBottom: 10
-                    }}>
-                      <strong>{lead.name}</strong>
-                      <div>{lead.phone}</div>
-
-                      <button
-                        onClick={() => deleteLead(lead)}
-                        style={{
-                          marginTop: 6,
-                          background: "#ef4444",
-                          color: "white",
-                          padding: "6px 10px",
-                          borderRadius: 6
-                        }}
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  ))
-                ))}
-
-              {/* INFO */}
-              {activeTab === "info" && (
-                <>
-                  <h3>Add FAQ</h3>
-
-                  <input
-                    placeholder="Question"
-                    value={faqQuestion}
-                    onChange={(e) => setFaqQuestion(e.target.value)}
-                    style={{ width: "100%", padding: 10, marginBottom: 10, border: "1px solid #ccc", borderRadius: 6 }}
-                  />
-
-                  <input
-                    placeholder="Answer"
-                    value={faqAnswer}
-                    onChange={(e) => setFaqAnswer(e.target.value)}
-                    style={{ width: "100%", padding: 10, marginBottom: 10, border: "1px solid #ccc", borderRadius: 6 }}
-                  />
-
-                  <button onClick={addFAQ} style={{ background: "#3b82f6", color: "white", padding: 10, borderRadius: 6 }}>
-                    Add FAQ
-                  </button>
-
-                  <h3 style={{ marginTop: 20 }}>Saved FAQs</h3>
-
-                  {(selectedClient.faqs || []).map((faq, i) => (
-                    <div key={i} style={{
-                      border: "2px solid #3b82f6",
-                      padding: 12,
-                      borderRadius: 10,
-                      marginBottom: 10
-                    }}>
-                      <strong>{faq.question}</strong>
-                      <div>{faq.answer}</div>
-
-                      <button
-                        onClick={() => deleteFAQ(i)}
-                        style={{
-                          marginTop: 6,
-                          background: "#ef4444",
-                          color: "white",
-                          padding: "6px 10px",
-                          borderRadius: 6
-                        }}
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  ))}
-                </>
-              )}
-
-              {/* CONTACT */}
+            <div style={{ background: "white", padding: 20, borderRadius: 12 }}>
               {activeTab === "contact" && (
                 <>
-                  <h3>Contact Info</h3>
-
-                  <input placeholder="Phone" value={phone} onChange={(e) => setPhone(e.target.value)} style={{ width: "100%", padding: 10, marginBottom: 10, border: "1px solid #ccc", borderRadius: 6 }} />
-
-                  <input placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} style={{ width: "100%", padding: 10, marginBottom: 10, border: "1px solid #ccc", borderRadius: 6 }} />
-
-                  <button onClick={saveContact} style={{ background: "#3b82f6", color: "white", padding: 10, borderRadius: 6 }}>
-                    Save Contact
-                  </button>
+                  <input value={phone} onChange={(e) => setPhone(e.target.value)} />
+                  <input value={email} onChange={(e) => setEmail(e.target.value)} />
+                  <button onClick={saveContact}>Save</button>
                 </>
               )}
 
-              {/* LOGIN */}
               {activeTab === "login" && (
                 <>
-                  <h3>Login Info</h3>
-
-                  <input placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} style={{ width: "100%", padding: 10, marginBottom: 10, border: "1px solid #ccc", borderRadius: 6 }} />
-
-                  <input placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} style={{ width: "100%", padding: 10, marginBottom: 10, border: "1px solid #ccc", borderRadius: 6 }} />
-
-                  <button onClick={saveLogin} style={{ background: "#3b82f6", color: "white", padding: 10, borderRadius: 6 }}>
-                    Save Login
-                  </button>
+                  <input value={username} onChange={(e) => setUsername(e.target.value)} />
+                  <input value={password} onChange={(e) => setPassword(e.target.value)} />
+                  <button onClick={saveLogin}>Save Login</button>
                 </>
               )}
-
             </div>
           </>
         )}

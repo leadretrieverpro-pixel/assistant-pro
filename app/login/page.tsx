@@ -1,37 +1,35 @@
 "use client";
 
 import { useState } from "react";
+import { supabase } from "../lib/supabase"; // ✅ IMPORTANT
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
-  function handleLogin() {
-    const clients = JSON.parse(localStorage.getItem("clients") || "[]");
-
-    console.log("Stored clients:", clients);
-
-    const cleanUsername = username.trim().toLowerCase();
+  // ✅ ✅ CLEAN GLOBAL LOGIN FUNCTION
+  async function handleLogin() {
+    const cleanUsername = username.trim();
     const cleanPassword = password.trim();
 
-    const client = clients.find((c: any) => {
-      if (!c.login) return false;
+    const { data, error } = await supabase
+      .from("clients")
+      .select("*")
+      .eq("username", cleanUsername)
+      .eq("password", cleanPassword)
+      .limit(1);
 
-      console.log("Checking:", c.login);
+    console.log("LOGIN RESULT:", data, error);
 
-      return (
-        c.login.username?.toLowerCase().trim() === cleanUsername &&
-        c.login.password?.trim() === cleanPassword
-      );
-    });
-
-    console.log("Matched client:", client);
-
-    if (client) {
-      window.location.href = "/company?client=" + client.id;
-    } else {
+    if (error || !data || data.length === 0) {
+      console.log("LOGIN FAILED:", error, data);
       alert("Invalid username or password");
+      return;
     }
+
+    // ✅ redirect to their dashboard
+    window.location.href = "/company?client=" + data[0].id;
+    
   }
 
   return (
@@ -137,4 +135,3 @@ export default function LoginPage() {
     </div>
   );
 }
-``
