@@ -26,7 +26,8 @@ export default function LoginPage() {
       alert("Invalid username or password");
       return;
     }
-
+    console.log("LOGIN SUCCESS:", data);
+    console.log("REDIRECTING TO:", data[0].id);
     // ✅ redirect to their dashboard
     window.location.href = "/company?client=" + data[0].id;
     
