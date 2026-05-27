@@ -87,19 +87,22 @@ useEffect(() => {
 }, [clientId]);
 
   // ✅ SAVE CONTACT
-  function saveContact() {
-    const clients = JSON.parse(localStorage.getItem("clients") || "[]");
+  async function saveContact() {
+  if (!clientId) return;
 
-    const updated = clients.map((c: any) =>
-      c.id === clientId
-        ? { ...c, contact: { phone, email } }
-        : c
-    );
+  const { error } = await supabase
+    .from("clients")
+    .update({ phone, email })
+    .eq("id", String(clientId));
 
-    localStorage.setItem("clients", JSON.stringify(updated));
-    alert("Saved ✅");
+  if (error) {
+    console.error("Error saving contact:", error);
+    alert("Error saving contact");
+    return;
   }
 
+  alert("Saved ✅");
+}
   // ✅ ADD FAQ
   function addFAQ() {
     if (!faqQuestion || !faqAnswer) return;
