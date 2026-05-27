@@ -101,47 +101,86 @@ useEffect(() => {
     return;
   }
 
+  // ✅ REFRESH CLIENT DATA
+  const { data } = await supabase
+    .from("clients")
+    .select("*")
+    .eq("id", String(clientId))
+    .maybeSingle();
+
+  if (data) {
+    setClient(data);
+    setPhone(data.phone || "");
+    setEmail(data.email || "");
+  }
+
   alert("Saved ✅");
 }
+
   // ✅ ADD FAQ
-  function addFAQ() {
-    if (!faqQuestion || !faqAnswer) return;
+  async function addFAQ() {
+  if (!faqQuestion.trim() || !faqAnswer.trim() || !clientId) return;
 
-    const clients = JSON.parse(localStorage.getItem("clients") || "[]");
+  const updatedFaqs = [
+    ...(client.faqs || []),
+    { question: faqQuestion, answer: faqAnswer },
+  ];
 
-    const updated = clients.map((c: any) =>
-      c.id === clientId
-        ? {
-            ...c,
-            faqs: [...(c.faqs || []), { question: faqQuestion, answer: faqAnswer }],
-          }
-        : c
-    );
+  const { error } = await supabase
+    .from("clients")
+    .update({ faqs: updatedFaqs })
+    .eq("id", String(clientId));
 
-    localStorage.setItem("clients", JSON.stringify(updated));
-
-    setFaqQuestion("");
-    setFaqAnswer("");
-
-    window.location.reload();
+  if (error) {
+    console.error("Error saving FAQ:", error);
+    return;
   }
+
+  // ✅ refresh client
+  const { data } = await supabase
+    .from("clients")
+    .select("*")
+    .eq("id", String(clientId))
+    .maybeSingle();
+
+  if (data) {
+    setClient(data);
+  }
+
+  setFaqQuestion("");
+  setFaqAnswer("");
+}
+
 
   // ✅ DELETE FAQ
-  function deleteFAQ(index: number) {
-    const clients = JSON.parse(localStorage.getItem("clients") || "[]");
+  async function deleteFAQ(index: number) {
+  if (!clientId || !client) return;
 
-    const updated = clients.map((c: any) => {
-      if (c.id === clientId) {
-        const newFaqs = [...(c.faqs || [])];
-        newFaqs.splice(index, 1);
-        return { ...c, faqs: newFaqs };
-      }
-      return c;
-    });
+  const updatedFaqs = [...(client.faqs || [])];
+  updatedFaqs.splice(index, 1);
 
-    localStorage.setItem("clients", JSON.stringify(updated));
-    window.location.reload();
+  const { error } = await supabase
+    .from("clients")
+    .update({ faqs: updatedFaqs })
+    .eq("id", String(clientId));
+
+  if (error) {
+    console.error("Error deleting FAQ:", error);
+    return;
   }
+
+  // ✅ refresh client data (NO page reload)
+  const { data } = await supabase
+    .from("clients")
+    .select("*")
+    .eq("id", String(clientId))
+    .maybeSingle();
+
+  if (data) {
+    setClient(data);
+  }
+}
+
 
   // ✅ DELETE LEAD (FIXED)
   async function deleteLead(id: string) {
