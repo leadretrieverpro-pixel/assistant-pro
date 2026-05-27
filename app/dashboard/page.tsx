@@ -212,7 +212,8 @@ export default function DashboardPage() {
             onClick={() => setSelectedClientId(client.id)}
             style={{
               marginTop: 10,
-              padding: 10,
+              padding: 12,
+              borderRadius: 8,   // ✅ makes it softer
               background: selectedClientId === client.id ? "#3b82f6" : "#222",
               cursor: "pointer",
             }}
@@ -220,14 +221,22 @@ export default function DashboardPage() {
             {client.name}
 
             <button
-              onClick={(e) => {
-                e.stopPropagation();
-                copyChatLink(client.id);
-              }}
-              style={{ width: "100%", marginTop: 5 }}
-            >
-              Copy Link
-            </button>
+  onClick={(e) => {
+    e.stopPropagation();
+    copyChatLink(client.id);
+  }}
+  style={{
+    width: "100%",
+    marginTop: 8,
+    padding: "6px 8px",
+    borderRadius: 6,
+    border: "1px solid black",   // ✅ black border
+    background: "white",
+    cursor: "pointer"
+  }}
+>
+  Copy Link
+</button>
           </div>
         ))}
       </div>
@@ -243,7 +252,20 @@ export default function DashboardPage() {
             {/* ✅ TABS */}
             <div style={{ marginBottom: 20 }}>
               {["leads", "info", "contact", "login"].map((tab) => (
-                <button key={tab} onClick={() => setActiveTab(tab)} style={{ marginRight: 10 }}>
+                <button
+  key={tab}
+  onClick={() => setActiveTab(tab)}
+  style={{
+    marginRight: 10,
+    padding: "8px 14px",
+    borderRadius: 20,
+    border: "none",
+    cursor: "pointer",
+    background: activeTab === tab ? "#3b82f6" : "#e5e7eb",
+    color: activeTab === tab ? "white" : "#111",
+    fontWeight: 500
+  }}
+>
                   {tab === "leads"
                   ? "Leads"
           : tab === "info"
@@ -256,7 +278,12 @@ export default function DashboardPage() {
             </div>
 
             {/* ✅ CONTENT */}
-            <div style={{ background: "white", padding: 20, borderRadius: 12 }}>
+            <div style={{
+  background: "white",
+  padding: 20,
+  borderRadius: 12,
+  boxShadow: "0 4px 12px rgba(0,0,0,0.08)"  // ✅ subtle shadow
+}}>
 
               {/* ✅ LEADS */}
               {activeTab === "leads" && (
@@ -375,7 +402,18 @@ export default function DashboardPage() {
               {/* ✅ CONTACT */}
               {activeTab === "contact" && (
                 <>
-                  <input value={phone} onChange={(e) => setPhone(e.target.value)} />
+                  <input
+  value={phone}
+  onChange={(e) => setPhone(e.target.value)}
+  style={{
+    width: "100%",
+    padding: 8,
+    borderRadius: 6,
+    border: "1px solid #ccc",
+    marginBottom: 8
+  }}
+/>
+
                   <input value={email} onChange={(e) => setEmail(e.target.value)} />
                   <button onClick={saveContact}>Save</button>
                 </>
