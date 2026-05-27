@@ -234,7 +234,7 @@ export default function DashboardPage() {
 
             {/* ✅ TABS */}
             <div style={{ marginBottom: 20 }}>
-              {["leads", "contact", "login"].map((tab) => (
+              {["leads", "info", "contact", "login"].map((tab) => (
                 <button key={tab} onClick={() => setActiveTab(tab)} style={{ marginRight: 10 }}>
                   {tab}
                 </button>
@@ -268,6 +268,87 @@ export default function DashboardPage() {
                   ))
                 )
               )}
+              {/* ✅ COMPANY INFO / FAQ */}
+{activeTab === "info" && (
+  <>
+    {/* ✅ ADD FAQ */}
+    <div style={{
+      border: "2px solid #3b82f6",
+      padding: 12,
+      borderRadius: 10,
+      marginBottom: 15
+    }}>
+      <input
+        placeholder="Question"
+        value={faqQuestion}
+        onChange={(e) => setFaqQuestion(e.target.value)}
+        style={{ width: "100%", padding: 8, marginBottom: 8 }}
+      />
+
+      <input
+        placeholder="Answer"
+        value={faqAnswer}
+        onChange={(e) => setFaqAnswer(e.target.value)}
+        style={{ width: "100%", padding: 8, marginBottom: 8 }}
+      />
+
+      <button
+        onClick={() => {
+          if (!faqQuestion || !faqAnswer || !selectedClientId) return;
+
+          const updated = clients.map((c) =>
+            c.id === selectedClientId
+              ? {
+                  ...c,
+                  faqs: [...(c.faqs || []), { question: faqQuestion, answer: faqAnswer }],
+                }
+              : c
+          );
+
+          setClients(updated);
+          setFaqQuestion("");
+          setFaqAnswer("");
+        }}
+        style={{
+          background: "#3b82f6",
+          color: "white",
+          padding: "8px 14px",
+          borderRadius: 6,
+          border: "none"
+        }}
+      >
+        Add FAQ
+      </button>
+    </div>
+
+    {/* ✅ FAQ LIST */}
+    {(selectedClient?.faqs || []).map((faq: any, i: number) => (
+      <div key={i} style={{
+        border: "2px solid #3b82f6",
+        borderRadius: 10,
+        padding: 12,
+        marginBottom: 10
+      }}>
+        <strong>{faq.question}</strong>
+        <div>{faq.answer}</div>
+
+        <button
+          onClick={() => deleteFAQ(i)}
+          style={{
+            marginTop: 8,
+            background: "#ef4444",
+            color: "white",
+            padding: "6px 10px",
+            borderRadius: 6,
+            border: "none"
+          }}
+        >
+          Delete
+        </button>
+      </div>
+    ))}
+  </>
+)}
 
               {/* ✅ CONTACT */}
               {activeTab === "contact" && (
