@@ -167,18 +167,26 @@ export default function DashboardPage() {
   }
 
   // ✅ DELETE FAQ
-  function deleteFAQ(index: number) {
-    const updated = clients.map((c) => {
-      if (c.id === selectedClientId) {
-        const newFaqs = [...(c.faqs || [])];
-        newFaqs.splice(index, 1);
-        return { ...c, faqs: newFaqs };
-      }
-      return c;
-    });
+  async function deleteFAQ(index: number) {
+  if (!selectedClient) return;
 
-    setClients(updated);
+  const updatedFaqs = [...(selectedClient.faqs || [])];
+  updatedFaqs.splice(index, 1);
+
+  const { error } = await supabase
+    .from("clients")
+    .update({ faqs: updatedFaqs })
+    .eq("id", selectedClient.id);
+
+  if (error) {
+    console.error("Error deleting FAQ:", error);
+    return;
   }
+
+  const { data } = await supabase.from("clients").select("*");
+  setClients(data || []);
+}
+
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", fontFamily: "Arial", color: "#111" }}>
@@ -236,7 +244,13 @@ export default function DashboardPage() {
             <div style={{ marginBottom: 20 }}>
               {["leads", "info", "contact", "login"].map((tab) => (
                 <button key={tab} onClick={() => setActiveTab(tab)} style={{ marginRight: 10 }}>
-                  {tab}
+                  {tab === "leads"
+                  ? "Leads"
+          : tab === "info"
+                  ? "Company Info"
+          : tab === "contact"
+                  ? "Contact"
+                  : "Login"}
                 </button>
               ))}
             </div>
@@ -293,22 +307,30 @@ export default function DashboardPage() {
       />
 
       <button
-        onClick={() => {
-          if (!faqQuestion || !faqAnswer || !selectedClientId) return;
+       onClick={async () => {
+  if (!faqQuestion.trim() || !faqAnswer.trim() || !selectedClientId) return;
 
-          const updated = clients.map((c) =>
-            c.id === selectedClientId
-              ? {
-                  ...c,
-                  faqs: [...(c.faqs || []), { question: faqQuestion, answer: faqAnswer }],
-                }
-              : c
-          );
+  const updatedFaqs = [
+    ...(selectedClient?.faqs || []),
+    { question: faqQuestion, answer: faqAnswer },
+  ];
 
-          setClients(updated);
-          setFaqQuestion("");
-          setFaqAnswer("");
-        }}
+  const { error } = await supabase
+    .from("clients")
+    .update({ faqs: updatedFaqs })
+    .eq("id", selectedClientId);
+
+  if (error) {
+    console.error("Error saving FAQ:", error);
+    return;
+  }
+
+  // ✅ reload clients so UI updates
+  const { data } = await supabase.from("clients").select("*");
+  setClients(data || []);
+  setFaqQuestion("");
+  setFaqAnswer("");
+}}
         style={{
           background: "#3b82f6",
           color: "white",
