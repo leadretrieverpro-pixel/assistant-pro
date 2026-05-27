@@ -20,7 +20,7 @@ export default function DashboardPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
-  // ✅ LOAD CLIENTS FROM SUPABASE
+  // ✅ LOAD CLIENTS
   useEffect(() => {
     async function loadClients() {
       const { data, error } = await supabase.from("clients").select("*");
@@ -36,26 +36,47 @@ export default function DashboardPage() {
     loadClients();
   }, []);
 
+  // ✅ LOAD LEADS
+  useEffect(() => {
+    async function loadLeads() {
+      const { data, error } = await supabase
+        .from("leads")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      console.log("ADMIN LEADS:", data, error);
+
+      if (error) {
+        console.error("Error loading leads:", error);
+        return;
+      }
+
+      setLeads(data || []);
+    }
+
+    loadLeads();
+  }, []);
+
   const selectedClient = clients.find(
     (c) => String(c.id) === String(selectedClientId)
   );
 
-  // ✅ LOAD CLIENT DETAILS INTO FORM
+  // ✅ LOAD CLIENT DATA INTO FORM
   useEffect(() => {
-  if (selectedClient) {
-    setPhone((prev) => prev || selectedClient.phone || "");
-    setEmail((prev) => prev || selectedClient.email || "");
-    setUsername((prev) => prev || selectedClient.username || "");
-    setPassword((prev) => prev || selectedClient.password || "");
-  }
-}, [selectedClient]);
+    if (selectedClient) {
+      setPhone(selectedClient.phone || "");
+      setEmail(selectedClient.email || "");
+      setUsername(selectedClient.username || "");
+      setPassword(selectedClient.password || "");
+    }
+  }, [selectedClient]);
 
-
+  // ✅ FILTER LEADS
   const clientLeads = leads.filter(
-    (l) => selectedClient && l.clientId === selectedClient.id
+    (l) => selectedClient && String(l.client_id) === String(selectedClient.id)
   );
 
-  // ✅ ADD CLIENT (SUPABASE)
+  // ✅ ADD CLIENT
   async function addClient() {
     if (!clientName.trim()) return;
 
@@ -74,7 +95,6 @@ export default function DashboardPage() {
 
     if (error) {
       console.error("Error adding client:", error);
-      alert("Error saving client");
       return;
     }
 
@@ -89,7 +109,7 @@ export default function DashboardPage() {
     alert("Copied ✅");
   }
 
-  // ✅ SAVE CONTACT (SUPABASE)
+  // ✅ SAVE CONTACT
   async function saveContact() {
     if (!selectedClientId) return;
 
@@ -97,28 +117,20 @@ export default function DashboardPage() {
       .from("clients")
       .update({ phone, email })
       .eq("id", String(selectedClientId));
-``
 
     if (error) {
       console.error(error);
-      alert("Error saving contact");
       return;
     }
 
-    const { data } = await supabase.from("clients").select("*");
-setClients(data || []);
-
-alert("Saved ✅");
+    alert("Saved ✅");
   }
 
-  // ✅ SAVE LOGIN (SUPABASE)
+  // ✅ SAVE LOGIN
   async function saveLogin() {
     if (!selectedClientId) return;
 
-    const cleanUsername = username.trim();
-    const cleanPassword = password.trim();
-
-    if (!cleanUsername || !cleanPassword) {
+    if (!username.trim() || !password.trim()) {
       alert("Enter username and password");
       return;
     }
@@ -126,60 +138,35 @@ alert("Saved ✅");
     const { error } = await supabase
       .from("clients")
       .update({
-        username: cleanUsername,
-        password: cleanPassword,
+        username,
+        password,
       })
       .eq("id", String(selectedClientId));
-``
 
     if (error) {
-      console.error("Error saving login:", error);
-      alert("Error saving login");
+      console.error(error);
       return;
     }
 
-    const { data } = await supabase.from("clients").select("*");
-setClients(data || []);
-
-alert("Saved ✅");
-
+    alert("Saved ✅");
   }
 
-  // ✅ DELETE LEAD (TEMP LOCAL ONLY)
-  function deleteLead(lead: any) {
-    const updated = leads.filter(
-      (l) =>
-        !(
-          l.name === lead.name &&
-          l.phone === lead.phone &&
-          l.clientId === lead.clientId &&
-          l.timestamp === lead.timestamp
-        )
-    );
+  // ✅ DELETE LEAD
+  async function deleteLead(id: string) {
+    const { error } = await supabase
+      .from("leads")
+      .delete()
+      .eq("id", id);
 
-    setLeads(updated);
+    if (error) {
+      console.error("Error deleting lead:", error);
+      return;
+    }
+
+    setLeads((prev) => prev.filter((l) => l.id !== id));
   }
 
-  // ✅ FAQ ADD (TEMP LOCAL ONLY)
-  function addFAQ() {
-    if (!faqQuestion || !faqAnswer || !selectedClient) return;
-
-    const updated = clients.map((c) =>
-      c.id === selectedClient.id
-        ? {
-            ...c,
-            faqs: [...(c.faqs || []), { question: faqQuestion, answer: faqAnswer }],
-          }
-        : c
-    );
-
-    setClients(updated);
-
-    setFaqQuestion("");
-    setFaqAnswer("");
-  }
-
-  // ✅ FAQ DELETE (TEMP LOCAL ONLY)
+  // ✅ DELETE FAQ
   function deleteFAQ(index: number) {
     const updated = clients.map((c) => {
       if (c.id === selectedClientId) {
@@ -195,7 +182,8 @@ alert("Saved ✅");
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", fontFamily: "Arial", color: "#111" }}>
-      {/* SIDEBAR */}
+
+      {/* ✅ SIDEBAR */}
       <div style={{ width: 260, background: "#111", color: "white", padding: 20 }}>
         <h2>Clients</h2>
 
@@ -203,27 +191,10 @@ alert("Saved ✅");
           placeholder="New client"
           value={clientName}
           onChange={(e) => setClientName(e.target.value)}
-          style={{
-            width: "100%",
-            padding: 10,
-            marginBottom: 10,
-            borderRadius: 6,
-            border: "1px solid #444",
-            background: "#222",
-            color: "white",
-          }}
+          style={{ width: "100%", padding: 10, marginBottom: 10 }}
         />
 
-        <button
-          onClick={addClient}
-          style={{
-            width: "100%",
-            background: "#3b82f6",
-            color: "white",
-            padding: 10,
-            borderRadius: 6,
-          }}
-        >
+        <button onClick={addClient} style={{ width: "100%", marginBottom: 10 }}>
           Add Client
         </button>
 
@@ -232,29 +203,20 @@ alert("Saved ✅");
             key={client.id}
             onClick={() => setSelectedClientId(client.id)}
             style={{
-              marginTop: 12,
+              marginTop: 10,
               padding: 10,
-              borderRadius: 8,
-              background: selectedClientId === client.id ? "#3b82f6" : "#1f2937",
+              background: selectedClientId === client.id ? "#3b82f6" : "#222",
               cursor: "pointer",
             }}
           >
-            <div>{client.name}</div>
+            {client.name}
 
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 copyChatLink(client.id);
               }}
-              style={{
-                width: "100%",
-                marginTop: 6,
-                background: "#1d4ed8",
-                color: "white",
-                padding: 6,
-                borderRadius: 6,
-                border: "2px solid black",
-              }}
+              style={{ width: "100%", marginTop: 5 }}
             >
               Copy Link
             </button>
@@ -262,7 +224,7 @@ alert("Saved ✅");
         ))}
       </div>
 
-      {/* MAIN */}
+      {/* ✅ MAIN */}
       <div style={{ flex: 1, padding: 30, background: "#f3f4f6" }}>
         {!selectedClient ? (
           <h2>Select a client</h2>
@@ -270,24 +232,44 @@ alert("Saved ✅");
           <>
             <h2>{selectedClient.name}</h2>
 
+            {/* ✅ TABS */}
             <div style={{ marginBottom: 20 }}>
-              {["leads", "info", "contact", "login"].map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  style={{
-                    marginRight: 10,
-                    padding: "8px 14px",
-                    borderRadius: 20,
-                    background: activeTab === tab ? "#3b82f6" : "#d1d5db",
-                  }}
-                >
+              {["leads", "contact", "login"].map((tab) => (
+                <button key={tab} onClick={() => setActiveTab(tab)} style={{ marginRight: 10 }}>
                   {tab}
                 </button>
               ))}
             </div>
 
+            {/* ✅ CONTENT */}
             <div style={{ background: "white", padding: 20, borderRadius: 12 }}>
+
+              {/* ✅ LEADS */}
+              {activeTab === "leads" && (
+                clientLeads.length === 0 ? (
+                  <p>No leads yet</p>
+                ) : (
+                  clientLeads.map((lead, i) => (
+                    <div key={i} style={{
+                      border: "2px solid #3b82f6",
+                      marginBottom: 10,
+                      padding: 10,
+                      borderRadius: 8
+                    }}>
+                      <strong>{lead.name}</strong>
+                      <div>{lead.phone}</div>
+                      <div>{lead.email}</div>
+                      <div>{new Date(lead.created_at).toLocaleString()}</div>
+
+                      <button onClick={() => deleteLead(lead.id)}>
+                        Delete
+                      </button>
+                    </div>
+                  ))
+                )
+              )}
+
+              {/* ✅ CONTACT */}
               {activeTab === "contact" && (
                 <>
                   <input value={phone} onChange={(e) => setPhone(e.target.value)} />
@@ -296,6 +278,7 @@ alert("Saved ✅");
                 </>
               )}
 
+              {/* ✅ LOGIN */}
               {activeTab === "login" && (
                 <>
                   <input value={username} onChange={(e) => setUsername(e.target.value)} />
@@ -303,6 +286,7 @@ alert("Saved ✅");
                   <button onClick={saveLogin}>Save Login</button>
                 </>
               )}
+
             </div>
           </>
         )}
@@ -310,4 +294,3 @@ alert("Saved ✅");
     </div>
   );
 }
-``
