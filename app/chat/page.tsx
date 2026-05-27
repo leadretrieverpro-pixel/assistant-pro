@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import { supabase } from "../lib/supabase";
 
 function ChatComponent() {
   const params = useSearchParams();
@@ -24,24 +25,35 @@ function ChatComponent() {
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   // ✅ LOAD CLIENT DATA
-  useEffect(() => {
-    try {
-      const storedClients = JSON.parse(localStorage.getItem("clients") || "[]");
+ useEffect(() => {
+  async function loadClientData() {
+    if (!clientId) return;
 
-      const client = storedClients.find(
-        (c: any) => String(c.id) === String(clientId)
-      );
+    const { data, error } = await supabase
+      .from("clients")
+      .select("*")
+      .eq("id", String(clientId))
+      .maybeSingle();
 
-      if (client) {
-        setFaqs(client.faqs || []);
-        setContact(client.contact || { phone: "", email: "" });
-      }
-    } catch {}
-  }, [clientId]);
+    console.log("CHAT FETCH:", data, error);
 
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [chat]);
+    if (error) {
+      console.error("Error loading chat config:", error);
+      return;
+    }
+
+    if (!data) return;
+
+    setFaqs(data.faqs || []);
+    setContact({
+      phone: data.phone || "",
+      email: data.email || "",
+    });
+  }
+
+  loadClientData();
+}, [clientId]);
+
 
   // ✅ FAQ MATCHING FUNCTION
   function getFAQAnswer(text: string) {
@@ -126,24 +138,38 @@ function ChatComponent() {
     return msg;
   }
 
-  function submitLead() {
-    const storedLeads = JSON.parse(localStorage.getItem("leads") || "[]");
+  async function submitLead() {
+    console.log("SUBMIT BUTTON CLICKED");
 
-    localStorage.setItem(
-      "leads",
-      JSON.stringify([...storedLeads, { ...lead, clientId }])
-    );
+  if (!lead.name || !lead.phone) return;
 
-    setLeadCaptured(true);
-    setCollectingLead(false);
+  const { error } = await supabase.from("leads").insert([
+    {
+      name: lead.name,
+      phone: lead.phone,
+      email: lead.email,
+      client_id: clientId,
+      created_at: new Date().toISOString(),
+    },
+  ]);
 
-    setChat(prev => [
-      ...prev,
-      { role: "bot", text: `Thanks ${lead.name}! 👍 Ask me anything.` },
-    ]);
-
-    setLead({ name: "", phone: "", email: "" });
+  if (error) {
+    console.error("Error saving lead:", error);
+    alert("Error saving lead");
+    return;
   }
+
+  setLeadCaptured(true);
+  setCollectingLead(false);
+
+  setChat(prev => [
+    ...prev,
+    { role: "bot", text: `Thanks ${lead.name}! 👍 Ask me anything.` },
+  ]);
+
+  setLead({ name: "", phone: "", email: "" });
+}
+
 
   return (
     <div style={{

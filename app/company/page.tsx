@@ -59,6 +59,33 @@ useEffect(() => {
   loadClient();
 }, [clientId]);
 
+
+
+// ✅ ✅ ADD THIS NEW BLOCK RIGHT BELOW 👇
+
+useEffect(() => {
+  async function loadLeads() {
+    if (!clientId) return;
+
+    const { data, error } = await supabase
+      .from("leads")
+      .select("*")
+      .eq("client_id", String(clientId))
+      .order("created_at", { ascending: false });
+
+    console.log("LEADS:", data, error);
+
+    if (error) {
+      console.error("Error loading leads:", error);
+      return;
+    }
+
+    setLeads(data || []);
+  }
+
+  loadLeads();
+}, [clientId]);
+
   // ✅ SAVE CONTACT
   function saveContact() {
     const clients = JSON.parse(localStorage.getItem("clients") || "[]");
@@ -114,21 +141,19 @@ useEffect(() => {
   }
 
   // ✅ DELETE LEAD (FIXED)
-  function deleteLead(lead: any) {
-    const allLeads = JSON.parse(localStorage.getItem("leads") || "[]");
+  async function deleteLead(id: string) {
+  const { error } = await supabase
+    .from("leads")
+    .delete()
+    .eq("id", id);
 
-    const updated = allLeads.filter(
-      (l: any) =>
-        !(l.name === lead.name &&
-          l.phone === lead.phone &&
-          l.clientId === lead.clientId &&
-          l.timestamp === lead.timestamp) // ✅ NEW
-    );
-
-    localStorage.setItem("leads", JSON.stringify(updated));
-    setLeads(updated);
+  if (error) {
+    console.error("Error deleting lead:", error);
+    return;
   }
 
+  setLeads(prev => prev.filter(l => l.id !== id));
+}
   if (!client) {
     return <h2 style={{ padding: 20 }}>Loading...</h2>;
   }
@@ -200,12 +225,13 @@ useEffect(() => {
                     marginTop: 5,
                     color: "#555"
                   }}>
-                    {formatDate(lead.timestamp)}
+                    {formatDate(new Date(lead.created_at).getTime())}
+
                   </div>
                 </div>
 
                 <button
-                  onClick={() => deleteLead(lead)}
+                  onClick={() => deleteLead(lead.id)}
                   style={{
                     background: "#ef4444",
                     color: "white",
