@@ -25,7 +25,8 @@ function ChatComponent() {
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   // ✅ LOAD CLIENT DATA
- useEffect(() => {
+  // ✅ LOAD CLIENT DATA
+useEffect(() => {
   async function loadClientData() {
     if (!clientId) return;
 
@@ -54,6 +55,10 @@ function ChatComponent() {
   loadClientData();
 }, [clientId]);
 
+// ✅ AUTO SCROLL
+useEffect(() => {
+  chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+}, [chat, collectingLead]);
 
   // ✅ FAQ MATCHING FUNCTION
   function getFAQAnswer(text: string) {
@@ -213,12 +218,12 @@ function ChatComponent() {
               key={i}
               style={{
                 alignSelf: c.role === "user" ? "flex-end" : "flex-start",
-                background:
-                  c.role === "user" ? "#3b82f6" : "#e5e7eb",
+                background: c.role === "user" ? "#3b82f6" : "#e5e7eb",
+                color: c.role === "user" ? "white" : "#111",
                 padding: "10px 14px",
                 borderRadius: 12,
                 maxWidth: "75%"
-              }}
+              }} 
             >
               {c.text}
             </div>
@@ -259,13 +264,35 @@ function ChatComponent() {
 
         <div style={{ display: "flex", padding: 10 }}>
           <input
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-            style={{ flex: 1 }}
-          />
+  placeholder="Type your message here..."
+  value={message}
+  onChange={(e) => setMessage(e.target.value)}
+  onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+  style={{
+    flex: 1,
+    padding: 10,
+    borderRadius: 8,
+    border: "2px solid #3b82f6",   // ✅ BLUE BORDER
+    outline: "none",
+    marginRight: 8
+  }}
+/>
 
-          <button onClick={sendMessage}>Send</button>
+
+          <button
+  onClick={sendMessage}
+  style={{
+    background: "#3b82f6",
+    color: "white",
+    border: "none",
+    padding: "10px 16px",
+    borderRadius: 8,
+    cursor: "pointer"
+  }}
+>
+  Send
+</button>
+
         </div>
       </div>
     </div>
