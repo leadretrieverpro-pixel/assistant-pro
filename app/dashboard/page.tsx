@@ -211,14 +211,18 @@ export default function DashboardPage() {
             key={client.id}
             onClick={() => setSelectedClientId(client.id)}
             style={{
-              marginTop: 10,
-              padding: 12,
-              borderRadius: 8,   // ✅ makes it softer
-              background: selectedClientId === client.id ? "#3b82f6" : "#222",
-              cursor: "pointer",
-            }}
+  marginTop: 10,
+  padding: 12,
+  borderRadius: 8,
+  display: "flex",
+  flexDirection: "column",
+  justifyContent: "space-between",
+  background: selectedClientId === client.id ? "#3b82f6" : "#222", // ✅ FIXED
+  cursor: "pointer"
+}}
           >
-            {client.name}
+            <div style={{ marginBottom: 8 }}>{client.name}</div>
+
 
             <button
   onClick={(e) => {
@@ -226,14 +230,16 @@ export default function DashboardPage() {
     copyChatLink(client.id);
   }}
   style={{
-    width: "100%",
-    marginTop: 8,
-    padding: "6px 8px",
-    borderRadius: 6,
-    border: "1px solid black",   // ✅ black border
-    background: "white",
-    cursor: "pointer"
-  }}
+  marginTop: 8,
+  padding: "6px 10px",
+  background: selectedClientId === client.id ? "rgba(255,255,255,0.9)" : "#333",
+  border: "1px solid #aaa",
+  color: selectedClientId === client.id ? "#111" : "white", 
+  cursor: "pointer",
+  fontSize: 12,
+  width: "fit-content"  // ✅ key fix
+}}
+
 >
   Copy Link
 </button>
