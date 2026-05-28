@@ -297,14 +297,21 @@ export default function DashboardPage() {
                   <p>No leads yet</p>
                 ) : (
                   clientLeads.map((lead, i) => (
-                    <div key={i} style={{
-  marginBottom: 16,
-  padding: 16,
-  borderRadius: 12,
-  background: "white",
-  border: "1px solid #e5e7eb",     // ✅ softer border
-  boxShadow: "0 2px 6px rgba(0,0,0,0.05)"  // ✅ subtle depth
-}}>
+                    <div
+  key={i}
+  style={{
+    marginBottom: 16,
+    padding: 16,
+    borderRadius: 12,
+    background: "white",
+    border: "1px solid #e5e7eb",
+    boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
+    display: "flex",                  // ✅ NEW
+    justifyContent: "space-between",  // ✅ NEW
+    alignItems: "flex-start"          // ✅ NEW
+  }}
+>
+
                       <div style={{ fontWeight: "bold", fontSize: 16, marginBottom: 6 }}>
   {lead.name}
 </div>
