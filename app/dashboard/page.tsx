@@ -298,19 +298,48 @@ export default function DashboardPage() {
                 ) : (
                   clientLeads.map((lead, i) => (
                     <div key={i} style={{
-                      border: "2px solid #3b82f6",
-                      marginBottom: 10,
-                      padding: 10,
-                      borderRadius: 8
-                    }}>
-                      <strong>{lead.name}</strong>
-                      <div>{lead.phone}</div>
-                      <div>{lead.email}</div>
-                      <div>{new Date(lead.created_at).toLocaleString()}</div>
+  marginBottom: 16,
+  padding: 16,
+  borderRadius: 12,
+  background: "white",
+  border: "1px solid #e5e7eb",     // ✅ softer border
+  boxShadow: "0 2px 6px rgba(0,0,0,0.05)"  // ✅ subtle depth
+}}>
+                      <div style={{ fontWeight: "bold", fontSize: 16, marginBottom: 6 }}>
+  {lead.name}
+</div>
 
-                      <button onClick={() => deleteLead(lead.id)}>
-                        Delete
-                      </button>
+<div style={{ color: "#555", fontSize: 14 }}>
+  📞 {lead.phone}
+</div>
+
+{lead.email && (
+  <div style={{ color: "#555", fontSize: 14 }}>
+    📧 {lead.email}
+  </div>
+)}
+
+<div style={{ fontSize: 12, color: "#999", marginTop: 6 }}>
+  {new Date(lead.created_at).toLocaleString()}
+</div>
+
+
+                      <button
+  onClick={() => deleteLead(lead.id)}
+  style={{
+    transition: "all 0.2s",
+    marginTop: 10,
+    background: "#ef4444",
+    color: "white",
+    padding: "6px 10px",
+    borderRadius: 6,
+    border: "none",
+    cursor: "pointer",
+    fontSize: 12
+  }}
+>
+  Delete
+</button>
                     </div>
                   ))
                 )
