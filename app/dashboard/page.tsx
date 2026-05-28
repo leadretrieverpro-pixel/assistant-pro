@@ -306,13 +306,13 @@ export default function DashboardPage() {
     background: "white",
     border: "1px solid #e5e7eb",
     boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
-    display: "flex",                  // ✅ NEW
-    justifyContent: "space-between",  // ✅ NEW
-    alignItems: "flex-start"          // ✅ NEW
+    display: "flex",
+    flexDirection: "column",
+    gap: 6
   }}
 >
 
-                      <div style={{ fontWeight: "bold", fontSize: 16, marginBottom: 6 }}>
+<div style={{ fontWeight: "bold", fontSize: 16, marginBottom: 6 }}>
   {lead.name}
 </div>
 
@@ -331,7 +331,7 @@ export default function DashboardPage() {
 </div>
 
 
-                      <button
+ <button
   onClick={() => deleteLead(lead.id)}
   style={{
     transition: "all 0.2s",
